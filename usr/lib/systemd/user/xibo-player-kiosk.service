@@ -1,0 +1,30 @@
+[Unit]
+Description=Xibo PWA Digital Signage Player (Kiosk Mode)
+Documentation=https://github.com/tecman-solutions/xibo-players
+After=graphical-session.target
+Wants=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/opt/xibo-player/launch-kiosk.sh
+Restart=always
+RestartSec=5
+
+# Environment defaults — the launch script reads /etc/xibo-player/config.env,
+# but we set display variables here so systemd can pass them to the process.
+Environment=DISPLAY=:0
+Environment=WAYLAND_DISPLAY=wayland-0
+
+# Give the browser time to shut down cleanly
+TimeoutStopSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=xibo-player-kiosk
+
+[Install]
+WantedBy=graphical-session.target
