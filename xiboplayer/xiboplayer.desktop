@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Xibo PWA Player
+GenericName=Digital Signage Player
+Comment=Launch Xibo PWA digital signage player in kiosk mode
+Exec=xiboplayer
+Icon=video-display
+Terminal=false
+Categories=AudioVideo;Video;Player;
+Keywords=signage;digital;kiosk;xibo;
+StartupNotify=true
