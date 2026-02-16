@@ -288,4 +288,4 @@ git push origin rpm-v1.0.0
 
 ## License
 
-AGPLv3 -- See [LICENSE](../../LICENSE) for details.
+AGPL-3.0-or-later
