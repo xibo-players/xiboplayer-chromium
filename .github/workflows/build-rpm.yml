@@ -1,13 +1,9 @@
-name: Build RPM Package
+name: Build Chromium Kiosk RPM
 
 on:
   push:
-    branches:
-      - deploy
-    paths:
-      - 'platforms/fedora-rpm/**'
-    tags:
-      - 'rpm-v*'
+    branches: [deploy]
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       version:
@@ -21,18 +17,16 @@ on:
 
 jobs:
   build:
-    name: Build xibo-player-pwa RPM
+    name: Build xiboplayer-chromium RPM
     runs-on: ubuntu-latest
     container:
       image: fedora:latest
 
     steps:
       - name: Install build tools
-        run: |
-          dnf install -y rpm-build rpmdevtools git
+        run: dnf install -y rpm-build rpmdevtools git
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Determine version
         id: version
@@ -41,9 +35,8 @@ jobs:
             echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
             echo "release=${{ github.event.inputs.release }}" >> "$GITHUB_OUTPUT"
           elif [[ "${{ github.ref_type }}" == "tag" ]]; then
-            # Extract version from tag: rpm-v1.0.0 -> 1.0.0
             TAG="${{ github.ref_name }}"
-            VERSION="${TAG#rpm-v}"
+            VERSION="${TAG#v}"
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "release=1" >> "$GITHUB_OUTPUT"
           else
@@ -51,57 +44,79 @@ jobs:
             echo "release=1" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Make build script executable
-        run: chmod +x platforms/fedora-rpm/build-rpm.sh
-
       - name: Build RPM
-        working-directory: platforms/fedora-rpm
-        run: ./build-rpm.sh "${{ steps.version.outputs.version }}" "${{ steps.version.outputs.release }}"
+        run: |
+          chmod +x build-rpm.sh
+          ./build-rpm.sh "${{ steps.version.outputs.version }}" "${{ steps.version.outputs.release }}"
 
-      - name: Upload RPM artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: xibo-player-pwa-rpm
-          path: platforms/fedora-rpm/dist/*.rpm
+          name: chromium-rpm
+          path: dist/*.rpm
           retention-days: 30
 
   release:
     name: Create GitHub Release
     needs: build
-    if: startsWith(github.ref, 'refs/tags/rpm-v')
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Download RPM artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: xibo-player-pwa-rpm
+          name: chromium-rpm
           path: dist/
 
-      - name: Create release
-        uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v2
         with:
-          name: "Xibo PWA Player ${{ github.ref_name }}"
+          name: "Chromium Kiosk ${{ github.ref_name }}"
           body: |
-            ## Xibo PWA Player RPM Package
+            ## Xibo Chromium Kiosk RPM
 
             ### Installation
-
             ```bash
-            sudo dnf install ./xibo-player-pwa-*.noarch.rpm
+            sudo dnf install ./xiboplayer-pwa-*.noarch.rpm
             ```
 
             ### Post-install
-
-            1. Edit `/etc/xibo-player/config.env` and set your CMS URL
-            2. Enable the kiosk service:
-               ```bash
-               systemctl --user enable --now xibo-player-kiosk.service
-               ```
-
-            See [README](platforms/fedora-rpm/README.md) for full documentation.
+            1. Run `xiboplayer` once to create config
+            2. Edit `~/.config/xiboplayer/config.json` — set cmsUrl
+            3. `systemctl --user enable --now xiboplayer-kiosk.service`
           files: dist/*.rpm
           draft: false
           prerelease: false
+
+  publish-rpm:
+    name: Publish to gh-pages dnf repo
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+        continue-on-error: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: chromium-rpm
+          path: rpms/
+
+      - name: Setup dnf repo
+        run: |
+          mkdir -p gh-pages/rpm/packages
+          cp rpms/*.rpm gh-pages/rpm/packages/
+          docker run --rm -v "$PWD/gh-pages/rpm:/repo" fedora:latest \
+            bash -c "dnf install -y createrepo_c && createrepo_c /repo"
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: gh-pages
+          keep_files: true
