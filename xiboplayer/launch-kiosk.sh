@@ -2,7 +2,7 @@
 # =============================================================================
 # Xibo PWA Player — Kiosk Launcher
 #
-# Reads configuration from /etc/xibo-player/config.env and launches a
+# Reads configuration from ~/.config/xiboplayer/config.json and launches a
 # fullscreen browser in kiosk mode pointing at the configured CMS URL.
 #
 # Supports both Chromium/Chrome and Firefox.
@@ -11,11 +11,12 @@
 
 set -euo pipefail
 
-CONFIG_FILE="/etc/xiboplayer/config.env"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/xiboplayer"
+CONFIG_FILE="${CONFIG_DIR}/config.json"
 LOCK_FILE="/tmp/xiboplayer-kiosk.lock"
 
 # ---------------------------------------------------------------------------
-# Defaults (overridden by config.env)
+# Defaults (overridden by config.json)
 # ---------------------------------------------------------------------------
 CMS_URL="https://your-cms.example.com:8081/player/pwa/"
 BROWSER="chromium"
@@ -23,16 +24,27 @@ DISPLAY_KEY=""
 EXTRA_BROWSER_FLAGS=""
 
 # ---------------------------------------------------------------------------
-# Load configuration
+# Load configuration (JSON via jq)
 # ---------------------------------------------------------------------------
+if ! command -v jq &>/dev/null; then
+    echo "[xiboplayer] ERROR: jq is required. Install: sudo dnf install jq" >&2
+    exit 1
+fi
+
 if [[ -f "$CONFIG_FILE" ]]; then
-    # Source only KEY=VALUE lines, ignoring comments and empty lines
-    set -a
-    # shellcheck source=/dev/null
-    source "$CONFIG_FILE"
-    set +a
+    CMS_URL=$(jq -r '.cmsUrl // empty' "$CONFIG_FILE" 2>/dev/null) || true
+    BROWSER=$(jq -r '.browser // "chromium"' "$CONFIG_FILE" 2>/dev/null) || true
+    DISPLAY_KEY=$(jq -r '.displayKey // empty' "$CONFIG_FILE" 2>/dev/null) || true
+    EXTRA_BROWSER_FLAGS=$(jq -r '.extraBrowserFlags // empty' "$CONFIG_FILE" 2>/dev/null) || true
 else
-    echo "[xiboplayer] WARNING: Config file $CONFIG_FILE not found, using defaults." >&2
+    # First run — create default config from template
+    mkdir -p "$CONFIG_DIR"
+    if [[ -f /usr/share/xiboplayer/config.json.example ]]; then
+        cp /usr/share/xiboplayer/config.json.example "$CONFIG_FILE"
+        echo "[xiboplayer] Created default config at $CONFIG_FILE — edit cmsUrl and restart." >&2
+    else
+        echo "[xiboplayer] WARNING: No config at $CONFIG_FILE, using defaults." >&2
+    fi
 fi
 
 # Append display key to URL if set
@@ -176,7 +188,6 @@ build_chromium_args() {
         --password-store=basic
     )
 
-    # User data directory to keep profile isolated
     # XDG-compliant profile directory
     local data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/xiboplayer"
     args+=(--user-data-dir="$data_dir/chromium-profile")
