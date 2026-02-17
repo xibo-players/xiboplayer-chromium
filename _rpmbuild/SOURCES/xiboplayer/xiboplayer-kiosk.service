@@ -1,0 +1,21 @@
+[Unit]
+Description=Xibo PWA Digital Signage Player (Kiosk Mode)
+Documentation=https://github.com/linuxnow/xibo_players
+After=graphical-session.target
+Wants=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/xiboplayer
+Restart=always
+RestartSec=5
+TimeoutStopSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=xiboplayer-kiosk
+
+[Install]
+WantedBy=graphical-session.target

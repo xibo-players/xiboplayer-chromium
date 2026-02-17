@@ -1,0 +1,6 @@
+{
+  "cmsUrl": "https://your-cms.example.com:8081/player/pwa/",
+  "browser": "chromium",
+  "displayKey": "",
+  "extraBrowserFlags": ""
+}
