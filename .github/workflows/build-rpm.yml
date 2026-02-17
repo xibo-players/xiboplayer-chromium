@@ -2,121 +2,13 @@ name: Build Chromium Kiosk RPM
 
 on:
   push:
-    branches: [deploy]
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Package version (e.g. 1.0.0)'
-        required: false
-        default: '0.1.0'
-      release:
-        description: 'Release number'
-        required: false
-        default: '1'
 
 jobs:
   build:
-    name: Build xiboplayer-chromium RPM
-    runs-on: ubuntu-latest
-    container:
-      image: fedora:latest
-
-    steps:
-      - name: Install build tools
-        run: dnf install -y rpm-build rpmdevtools git systemd-rpm-macros
-
-      - uses: actions/checkout@v4
-
-      - name: Determine version
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
-            echo "release=${{ github.event.inputs.release }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
-            TAG="${{ github.ref_name }}"
-            VERSION="${TAG#v}"
-            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "release=1" >> "$GITHUB_OUTPUT"
-          else
-            echo "version=0.1.0" >> "$GITHUB_OUTPUT"
-            echo "release=1" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build RPM
-        run: |
-          chmod +x build-rpm.sh
-          ./build-rpm.sh "${{ steps.version.outputs.version }}" "${{ steps.version.outputs.release }}"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: chromium-rpm
-          path: dist/*.rpm
-          retention-days: 30
-
-  release:
-    name: Create GitHub Release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: chromium-rpm
-          path: dist/
-
-      - uses: softprops/action-gh-release@v2
-        with:
-          name: "Chromium Kiosk ${{ github.ref_name }}"
-          body: |
-            ## Xibo Chromium Kiosk RPM
-
-            ### Installation
-            ```bash
-            sudo dnf install ./xiboplayer-pwa-*.noarch.rpm
-            ```
-
-            ### Post-install
-            1. Run `xiboplayer` once to create config
-            2. Edit `~/.config/xiboplayer/config.json` — set cmsUrl
-            3. `systemctl --user enable --now xiboplayer-kiosk.service`
-          files: dist/*.rpm
-          draft: false
-          prerelease: false
-
-  publish-rpm:
-    name: Publish to gh-pages dnf repo
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          path: gh-pages
-        continue-on-error: true
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: chromium-rpm
-          path: rpms/
-
-      - name: Setup dnf repo
-        run: |
-          mkdir -p gh-pages/rpm/packages
-          cp rpms/*.rpm gh-pages/rpm/packages/
-          docker run --rm -v "$PWD/gh-pages/rpm:/repo" fedora:latest \
-            bash -c "dnf install -y createrepo_c && createrepo_c /repo"
-
-      - uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: gh-pages
-          keep_files: true
+    uses: xibo-players/.github/.github/workflows/build-rpm.yml@main
+    with:
+      package-name: xiboplayer-chromium
+      build-method: fedora
+      rpm-script: 'build-rpm.sh'
