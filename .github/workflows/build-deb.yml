@@ -1,0 +1,16 @@
+name: Build Chromium Kiosk DEB
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: xibo-players/.github/.github/workflows/build-deb.yml@main
+    with:
+      package-name: xiboplayer-chromium
+      deb-script: 'build-deb.sh'
