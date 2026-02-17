@@ -5,9 +5,11 @@ RPM distribution of the Xibo PWA digital signage player for kiosk deployments on
 ## What It Does
 
 - Launches a fullscreen Chromium browser in kiosk mode pointed at your Xibo CMS PWA player URL
+- **REST API first**, falls back to XMDS SOAP when REST is unavailable
 - Auto-restarts the browser if it crashes
 - Disables screen blanking and DPMS (X11 and Wayland)
 - Starts automatically on user login via a systemd user service
+- **Configurable log levels** (`error`, `warn`, `info`, `debug`, `trace`) — use `debug` during initial setup to verify CMS connectivity, schedule parsing, and media downloads, then switch to `warn` or `error` for production
 
 ## Building the RPM
 
