@@ -5,10 +5,12 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     uses: xibo-players/.github/.github/workflows/build-rpm.yml@main
     with:
       package-name: xiboplayer-chromium
-      build-method: fedora
       rpm-script: 'build-rpm.sh'
