@@ -85,6 +85,18 @@ DISPLAY_KEY=
 EXTRA_BROWSER_FLAGS=--force-device-scale-factor=1
 ```
 
+### Log Levels
+
+Set via URL parameter `?logLevel=DEBUG` or from CMS display settings:
+
+| Level | Use case |
+|-------|----------|
+| `DEBUG` | Initial deployment — verify CMS connectivity, schedule parsing, media downloads |
+| `INFO` | Normal operation (default) |
+| `WARNING` | Production — only unexpected conditions |
+| `ERROR` | Production — only failures |
+| `NONE` | Silent |
+
 ## Enabling Kiosk Auto-Start
 
 The kiosk runs as a **systemd user service**, meaning it runs as the logged-in desktop user (not root).
