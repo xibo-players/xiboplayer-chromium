@@ -50,7 +50,7 @@ sudo nano /etc/xiboplayer-chromium/config.env
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `CMS_URL` | Full URL to your Xibo CMS PWA player | `https://h1.superpantalles.com:8081/player/pwa/` |
+| `CMS_URL` | Full URL to your Xibo CMS PWA player | `https://your-cms.example.com/player/pwa/` |
 
 ### Optional settings
 
@@ -63,7 +63,7 @@ sudo nano /etc/xiboplayer-chromium/config.env
 ### Example configuration
 
 ```bash
-CMS_URL=https://h1.superpantalles.com:8081/player/pwa/
+CMS_URL=https://your-cms.example.com/player/pwa/
 BROWSER=chromium
 DISPLAY_KEY=
 EXTRA_BROWSER_FLAGS=--force-device-scale-factor=1
