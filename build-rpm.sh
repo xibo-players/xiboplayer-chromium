@@ -5,7 +5,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_NAME="xiboplayer-pwa"
-VERSION="${1:-1.0.0}"
+VERSION="${1:-0.1.0}"
 RELEASE="${2:-1}"
 
 echo "==> Building ${PKG_NAME}-${VERSION}-${RELEASE} RPM"

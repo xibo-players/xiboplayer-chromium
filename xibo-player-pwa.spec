@@ -1,12 +1,12 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-pwa
-Version:        1.0.0
+Version:        0.1.0
 Release:        1%{?dist}
 Summary:        Xibo PWA digital signage player (browser kiosk)
 
 License:        AGPL-3.0-or-later
-URL:            https://github.com/linuxnow/xibo_players
+URL:            https://github.com/xibo-players/xiboplayer-chromium
 Source0:        %{name}-%{version}.tar.gz
 
 BuildArch:      noarch
@@ -79,7 +79,7 @@ if [ "$1" -eq 0 ]; then
 fi
 
 %changelog
-* Mon Feb 16 2026 Pau Aliagas <linuxnow@gmail.com> - 1.0.0-1
+* Mon Feb 16 2026 Pau Aliagas <linuxnow@gmail.com> - 0.1.0-1
 - Renamed to xiboplayer-pwa, proper Fedora FHS paths
 - Launch script in /usr/libexec/xiboplayer/
 - Browser profiles in ~/.local/share/xiboplayer/

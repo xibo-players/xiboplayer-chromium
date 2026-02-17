@@ -9,7 +9,7 @@ on:
       version:
         description: 'Package version (e.g. 1.0.0)'
         required: false
-        default: '1.0.0'
+        default: '0.1.0'
       release:
         description: 'Release number'
         required: false
@@ -40,7 +40,7 @@ jobs:
             echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
             echo "release=1" >> "$GITHUB_OUTPUT"
           else
-            echo "version=1.0.0" >> "$GITHUB_OUTPUT"
+            echo "version=0.1.0" >> "$GITHUB_OUTPUT"
             echo "release=1" >> "$GITHUB_OUTPUT"
           fi
 
