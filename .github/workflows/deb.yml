@@ -128,7 +128,7 @@ jobs:
       - name: Upload DEB artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: debs-amd64
+          name: debs-built-on-amd64
           path: "*.deb"
           retention-days: 30
 
@@ -245,7 +245,7 @@ jobs:
       - name: Upload DEB artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: debs-arm64
+          name: debs-built-on-arm64
           path: "*.deb"
           retention-days: 30
 
