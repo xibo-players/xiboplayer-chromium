@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Install build tools
-        run: dnf install -y rpm-build rpmdevtools git
+        run: dnf install -y rpm-build rpmdevtools git systemd-rpm-macros
 
       - uses: actions/checkout@v4
 
