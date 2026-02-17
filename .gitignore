@@ -1,0 +1,6 @@
+# Build artifacts
+_rpmbuild/
+dist/
+deb-pkg/
+*.rpm
+*.deb
