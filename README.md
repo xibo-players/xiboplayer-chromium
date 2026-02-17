@@ -13,29 +13,7 @@ RPM distribution of the Xibo PWA digital signage player for kiosk deployments on
 
 ## Building the RPM
 
-### Prerequisites
-
-```bash
-sudo dnf install rpm-build rpmdevtools
-```
-
-### Build
-
-```bash
-chmod +x build-rpm.sh
-./build-rpm.sh
-```
-
-The RPM is output to `dist/xiboplayer-chromium-1.0.0-1.fc*.noarch.rpm`.
-
-To build with a custom version:
-
-```bash
-./build-rpm.sh 2.0.0        # Version 2.0.0, release 1
-./build-rpm.sh 2.0.0 3      # Version 2.0.0, release 3
-```
-
-For production builds, use the external RPM spec instead.
+RPM build scripts and GitHub Actions workflows are in the `deploy` branch.
 
 ## Installation
 
