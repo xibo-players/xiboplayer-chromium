@@ -80,7 +80,7 @@ echo "==> Built:"
 for deb in "$DIST_DIR"/*.deb; do
     [[ -f "$deb" ]] && echo "    $(basename "$deb") ($(du -h "$deb" | cut -f1))"
 done
-echo "    Install: sudo apt install ${DIST_DIR}/${PKG_NAME}_${VERSION}-*.deb"
+echo "    Install: sudo apt install ${DIST_DIR}/${PKG_NAME}_${VERSION}-${RELEASE}_all.deb"
 echo "    Enable:  systemctl --user enable --now xiboplayer-kiosk.service"
 
 rm -rf "$BUILD_ROOT"
