@@ -1,107 +1,22 @@
-name: Build RPM Package
+name: Build Chromium Kiosk RPM
 
 on:
   push:
-    branches:
-      - deploy
-    paths:
-      - 'platforms/fedora-rpm/**'
-    tags:
-      - 'rpm-v*'
+    tags: ['v*']
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Package version (e.g. 1.0.0)'
-        required: false
-        default: '1.0.0'
-      release:
-        description: 'Release number'
-        required: false
-        default: '1'
+
+permissions:
+  contents: write
 
 jobs:
   build:
-    name: Build xibo-player-pwa RPM
-    runs-on: ubuntu-latest
-    container:
-      image: fedora:latest
-
-    steps:
-      - name: Install build tools
-        run: |
-          dnf install -y rpm-build rpmdevtools git
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Determine version
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
-            echo "release=${{ github.event.inputs.release }}" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
-            # Extract version from tag: rpm-v1.0.0 -> 1.0.0
-            TAG="${{ github.ref_name }}"
-            VERSION="${TAG#rpm-v}"
-            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "release=1" >> "$GITHUB_OUTPUT"
-          else
-            echo "version=1.0.0" >> "$GITHUB_OUTPUT"
-            echo "release=1" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Make build script executable
-        run: chmod +x platforms/fedora-rpm/build-rpm.sh
-
-      - name: Build RPM
-        working-directory: platforms/fedora-rpm
-        run: ./build-rpm.sh "${{ steps.version.outputs.version }}" "${{ steps.version.outputs.release }}"
-
-      - name: Upload RPM artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: xibo-player-pwa-rpm
-          path: platforms/fedora-rpm/dist/*.rpm
-          retention-days: 30
-
-  release:
-    name: Create GitHub Release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/rpm-v')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download RPM artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: xibo-player-pwa-rpm
-          path: dist/
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "Xibo PWA Player ${{ github.ref_name }}"
-          body: |
-            ## Xibo PWA Player RPM Package
-
-            ### Installation
-
-            ```bash
-            sudo dnf install ./xibo-player-pwa-*.noarch.rpm
-            ```
-
-            ### Post-install
-
-            1. Edit `/etc/xibo-player/config.env` and set your CMS URL
-            2. Enable the kiosk service:
-               ```bash
-               systemctl --user enable --now xibo-player-kiosk.service
-               ```
-
-            See [README](platforms/fedora-rpm/README.md) for full documentation.
-          files: dist/*.rpm
-          draft: false
-          prerelease: false
+    uses: xibo-players/.github/.github/workflows/build-rpm.yml@main
+    with:
+      package-name: xiboplayer-chromium
+      rpm-spec: 'xiboplayer-chromium.spec'
+      rpm-script: 'build-rpm.sh'
+      arch-matrix: '["x86_64", "aarch64"]'
+      gpg-sign: true
+      publish-to-repo: true
+      create-github-release: true
+    secrets: inherit

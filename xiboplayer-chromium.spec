@@ -1,12 +1,12 @@
 %global debug_package %{nil}
 
-Name:           xiboplayer-pwa
-Version:        1.0.0
+Name:           xiboplayer-chromium
+Version:        0.2.0
 Release:        1%{?dist}
-Summary:        Xibo PWA digital signage player (browser kiosk)
+Summary:        Xibo PWA digital signage player (Chromium kiosk)
 
 License:        AGPL-3.0-or-later
-URL:            https://github.com/linuxnow/xibo_players
+URL:            https://github.com/xibo-players/%{name}
 Source0:        %{name}-%{version}.tar.gz
 
 BuildArch:      noarch
@@ -19,12 +19,16 @@ Requires:       systemd
 Recommends:     xdotool
 Recommends:     xset
 
+# Smooth upgrade from the old package name
+Obsoletes:      xiboplayer-pwa < %{version}-%{release}
+Provides:       xiboplayer-pwa = %{version}-%{release}
+
 Conflicts:      xiboplayer-electron
 
 %description
 Xibo PWA digital signage player for kiosk deployments on Fedora.
-Launches a fullscreen browser pointing at a Xibo CMS PWA player URL,
-with automatic restart and screen-blanking prevention.
+Launches a fullscreen Chromium browser pointing at a Xibo CMS PWA
+player URL, with automatic restart and screen-blanking prevention.
 
 %prep
 # Files are placed directly during install
@@ -33,8 +37,6 @@ with automatic restart and screen-blanking prevention.
 # Nothing to build — noarch package of scripts and config
 
 %install
-rm -rf %{buildroot}
-
 # Launch script
 install -Dm755 %{_sourcedir}/xiboplayer/launch-kiosk.sh \
     %{buildroot}%{_libexecdir}/xiboplayer/launch-kiosk.sh
@@ -66,7 +68,7 @@ install -Dm644 %{_sourcedir}/xiboplayer/xiboplayer.desktop \
 
 %post
 echo ""
-echo "  Xibo PWA Player installed."
+echo "  Xibo Chromium Player installed."
 echo ""
 echo "  1. Run 'xiboplayer' once — creates ~/.config/xiboplayer/config.json"
 echo "  2. Edit ~/.config/xiboplayer/config.json — set cmsUrl"
@@ -79,7 +81,11 @@ if [ "$1" -eq 0 ]; then
 fi
 
 %changelog
-* Mon Feb 16 2026 Pau Aliagas <linuxnow@gmail.com> - 1.0.0-1
-- Renamed to xiboplayer-pwa, proper Fedora FHS paths
+* Tue Feb 18 2026 Pau Aliagas <linuxnow@gmail.com> - 0.2.0-1
+- Rename package from xiboplayer-pwa to xiboplayer-chromium
+- Add Obsoletes/Provides for smooth upgrades
+- Conflict with xiboplayer-electron
+
+* Mon Feb 16 2026 Pau Aliagas <linuxnow@gmail.com> - 0.1.0-1
+- Initial RPM as xiboplayer-pwa
 - Launch script in /usr/libexec/xiboplayer/
-- Browser profiles in ~/.local/share/xiboplayer/

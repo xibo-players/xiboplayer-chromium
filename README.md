@@ -1,52 +1,39 @@
-# Xibo PWA Player -- Fedora RPM Package
+# Xibo PWA Player -- Chromium Kiosk RPM
 
 RPM distribution of the Xibo PWA digital signage player for kiosk deployments on Fedora, RHEL, and CentOS Stream.
 
 ## What It Does
 
-- Launches a fullscreen browser in kiosk mode pointed at your Xibo CMS PWA player URL
+- Launches a fullscreen Chromium browser in kiosk mode pointed at your Xibo CMS PWA player URL
+- **REST API first**, falls back to XMDS SOAP when REST is unavailable
 - Auto-restarts the browser if it crashes
 - Disables screen blanking and DPMS (X11 and Wayland)
 - Starts automatically on user login via a systemd user service
+- **Configurable log levels** (`error`, `warn`, `info`, `debug`, `trace`) — use `debug` during initial setup to verify CMS connectivity, schedule parsing, and media downloads, then switch to `warn` or `error` for production
 
 ## Building the RPM
 
-### Prerequisites
-
 ```bash
 sudo dnf install rpm-build rpmdevtools
-```
-
-### Build
-
-```bash
-cd platforms/fedora-rpm
-chmod +x build-rpm.sh
 ./build-rpm.sh
 ```
 
-The RPM is output to `dist/xibo-player-pwa-1.0.0-1.fc*.noarch.rpm`.
-
-To build with a custom version:
-
-```bash
-./build-rpm.sh 2.0.0        # Version 2.0.0, release 1
-./build-rpm.sh 2.0.0 3      # Version 2.0.0, release 3
-```
+This builds the RPM via the included spec file into `dist/`.
+For production builds, use the external RPM spec instead.
 
 ## Installation
 
 ### From local build
 
 ```bash
-sudo dnf install dist/xibo-player-pwa-1.0.0-1.fc*.noarch.rpm
+sudo dnf install dist/xiboplayer-chromium-1.0.0-1.fc*.noarch.rpm
 ```
 
 ### From GitHub release
 
 ```bash
 # Download the latest release RPM, then:
-sudo dnf install ./xibo-player-pwa-*.noarch.rpm
+sudo dnf install ./xiboplayer-chromium-*.noarch.rpm
 ```
 
 `dnf` will automatically pull in `chromium` if no supported browser is installed.
@@ -56,14 +43,14 @@ sudo dnf install ./xibo-player-pwa-*.noarch.rpm
 Edit the configuration file:
 
 ```bash
-sudo nano /etc/xibo-player/config.env
+sudo nano /etc/xiboplayer-chromium/config.env
 ```
 
 ### Required settings
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `CMS_URL` | Full URL to your Xibo CMS PWA player | `https://h1.superpantalles.com:8081/player/pwa/` |
+| `CMS_URL` | Full URL to your Xibo CMS PWA player | `https://your-cms.example.com/player/pwa/` |
 
 ### Optional settings
 
@@ -76,11 +63,23 @@ sudo nano /etc/xibo-player/config.env
 ### Example configuration
 
 ```bash
-CMS_URL=https://h1.superpantalles.com:8081/player/pwa/
+CMS_URL=https://your-cms.example.com/player/pwa/
 BROWSER=chromium
 DISPLAY_KEY=
 EXTRA_BROWSER_FLAGS=--force-device-scale-factor=1
 ```
+
+### Log Levels
+
+Set via URL parameter `?logLevel=DEBUG` or from CMS display settings:
+
+| Level | Use case |
+|-------|----------|
+| `DEBUG` | Initial deployment — verify CMS connectivity, schedule parsing, media downloads |
+| `INFO` | Normal operation (default) |
+| `WARNING` | Production — only unexpected conditions |
+| `ERROR` | Production — only failures |
+| `NONE` | Silent |
 
 ## Enabling Kiosk Auto-Start
 
@@ -89,31 +88,31 @@ The kiosk runs as a **systemd user service**, meaning it runs as the logged-in d
 ### Enable (run as the kiosk user, not root)
 
 ```bash
-systemctl --user enable --now xibo-player-kiosk.service
+systemctl --user enable --now xiboplayer-chromium-kiosk.service
 ```
 
 ### Disable
 
 ```bash
-systemctl --user disable --now xibo-player-kiosk.service
+systemctl --user disable --now xiboplayer-chromium-kiosk.service
 ```
 
 ### Check status
 
 ```bash
-systemctl --user status xibo-player-kiosk.service
+systemctl --user status xiboplayer-chromium-kiosk.service
 ```
 
 ### View logs
 
 ```bash
-journalctl --user -u xibo-player-kiosk.service -f
+journalctl --user -u xiboplayer-chromium-kiosk.service -f
 ```
 
 ### Manual launch (for testing)
 
 ```bash
-/opt/xibo-player/launch-kiosk.sh
+/opt/xiboplayer-chromium/launch-kiosk.sh
 ```
 
 ## Auto-Login Setup (Kiosk Machines)
@@ -137,7 +136,7 @@ sudo useradd -m -s /bin/bash kiosk
 sudo passwd kiosk
 
 # Enable the service for that user
-sudo -u kiosk bash -c 'systemctl --user enable xibo-player-kiosk.service'
+sudo -u kiosk bash -c 'systemctl --user enable xiboplayer-chromium-kiosk.service'
 
 # Enable lingering so user services start at boot (before login)
 sudo loginctl enable-linger kiosk
@@ -227,21 +226,21 @@ EXTRA_BROWSER_FLAGS=--start-fullscreen --window-size=1920,1080
 If the player reports "Already running", clean up the lock:
 
 ```bash
-rm -f /tmp/xibo-player-kiosk.lock
+rm -f /tmp/xiboplayer-chromium-kiosk.lock
 ```
 
 ### Using Google Chrome instead of Chromium
 
 ```bash
 sudo dnf install google-chrome-stable
-# Then in /etc/xibo-player/config.env:
+# Then in /etc/xiboplayer-chromium/config.env:
 BROWSER=google-chrome-stable
 ```
 
 ### Using Firefox
 
 ```bash
-# In /etc/xibo-player/config.env:
+# In /etc/xiboplayer-chromium/config.env:
 BROWSER=firefox
 ```
 
@@ -250,40 +249,16 @@ Note: Firefox kiosk mode (`--kiosk`) is supported since Firefox 71.
 ## Uninstalling
 
 ```bash
-sudo dnf remove xibo-player-pwa
+sudo dnf remove xiboplayer-chromium
 ```
 
-This removes the scripts and service file. The configuration in `/etc/xibo-player/config.env` is preserved (marked `%config(noreplace)` in the spec).
+This removes the scripts and service file. The configuration in `/etc/xiboplayer-chromium/config.env` is preserved (marked `%config(noreplace)` in the spec).
 
 To fully remove everything:
 
 ```bash
-sudo dnf remove xibo-player-pwa
-sudo rm -rf /etc/xibo-player /opt/xibo-player
-```
-
-## Files Installed
-
-| Path | Purpose |
-|------|---------|
-| `/opt/xibo-player/launch-kiosk.sh` | Main launch script |
-| `/etc/xibo-player/config.env` | Configuration (preserved on upgrade) |
-| `/usr/lib/systemd/user/xibo-player-kiosk.service` | Systemd user service |
-| `/usr/share/applications/xibo-player.desktop` | Desktop entry for manual launch |
-
-## CI/CD
-
-The GitHub Actions workflow (`.github/workflows/build-rpm.yml`) automatically:
-
-1. Builds the RPM on push to the `deploy` branch (when `platforms/fedora-rpm/` files change)
-2. Uploads the RPM as a build artifact
-3. Creates a GitHub release with the RPM attached when a `rpm-v*` tag is pushed
-
-### Creating a release
-
-```bash
-git tag rpm-v1.0.0
-git push origin rpm-v1.0.0
+sudo dnf remove xiboplayer-chromium
+sudo rm -rf /etc/xiboplayer-chromium /opt/xiboplayer-chromium
 ```
 
 ## License

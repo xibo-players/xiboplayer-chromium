@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Build xiboplayer-pwa RPM package
+# Build xiboplayer-chromium RPM package
 # Usage: ./build-rpm.sh [version] [release]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PKG_NAME="xiboplayer-pwa"
-VERSION="${1:-1.0.0}"
+PKG_NAME="xiboplayer-chromium"
+VERSION="${1:-0.2.0}"
 RELEASE="${2:-1}"
 
 echo "==> Building ${PKG_NAME}-${VERSION}-${RELEASE} RPM"
@@ -22,10 +22,10 @@ mkdir -p "$BUILD_ROOT"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 # Copy spec with version substitution
 sed -e "s/^Version:.*/Version:        ${VERSION}/" \
     -e "s/^Release:.*/Release:        ${RELEASE}%{?dist}/" \
-    "$SCRIPT_DIR/xibo-player-pwa.spec" \
+    "$SCRIPT_DIR/xiboplayer-chromium.spec" \
     > "$BUILD_ROOT/SPECS/${PKG_NAME}.spec"
 
-# Copy source files (new xiboplayer/ layout)
+# Copy source files
 cp -r "$SCRIPT_DIR/xiboplayer" "$BUILD_ROOT/SOURCES/"
 
 echo "==> Running rpmbuild..."
