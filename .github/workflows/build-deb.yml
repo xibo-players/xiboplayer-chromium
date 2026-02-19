@@ -16,4 +16,5 @@ jobs:
       deb-script: 'build-deb.sh'
       arch-matrix: '["amd64", "arm64"]'
       gpg-sign: true
+      extra-build-deps: 'nodejs npm'
     secrets: inherit

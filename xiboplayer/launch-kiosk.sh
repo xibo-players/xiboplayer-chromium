@@ -225,6 +225,7 @@ build_chromium_args() {
         --disable-features=TranslateUI
         --disable-ipc-flooding-protection
         --password-store=basic
+        --auto-select-desktop-capture-source="Entire screen"
     )
 
     # XDG-compliant profile directory

@@ -5,3 +5,6 @@ dist/
 deb-pkg/
 *.rpm
 *.deb
+
+# Node.js dependencies (installed during build)
+node_modules/

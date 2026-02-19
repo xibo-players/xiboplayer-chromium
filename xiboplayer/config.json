@@ -1,5 +1,5 @@
 {
-  "cmsUrl": "https://your-cms.example.com:8081/player/pwa/",
+  "cmsUrl": "https://your-cms.example.com",
   "browser": "chromium",
   "displayKey": "",
   "extraBrowserFlags": ""
