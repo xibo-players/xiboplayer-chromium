@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Xibo PWA Player — Kiosk Launcher
+# Xibo Player — Self-contained Chromium Kiosk
 #
-# Reads configuration from ~/.config/xiboplayer/config.json and launches a
-# fullscreen browser in kiosk mode pointing at the configured CMS URL.
+# Starts a local Node.js server that serves the bundled PWA player and proxies
+# CMS API requests, then launches Chromium in kiosk mode pointing at localhost.
 #
-# Supports both Chromium/Chrome and Firefox.
-# Handles screen-blanking prevention for X11 and Wayland (GNOME / KDE).
+# The PWA player files and server are bundled in the RPM — no external PWA
+# server is needed. Only the CMS base URL is required in the config.
 # =============================================================================
 
 set -euo pipefail
@@ -14,11 +14,19 @@ set -euo pipefail
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/xiboplayer"
 CONFIG_FILE="${CONFIG_DIR}/config.json"
 LOCK_FILE="/tmp/xiboplayer-kiosk.lock"
+SERVER_PID_FILE="/tmp/xiboplayer-server.pid"
+
+# Installed paths (RPM/DEB layout)
+SERVER_DIR="/usr/libexec/xiboplayer-chromium/server"
+
+# Server defaults
+SERVER_PORT=8765
+PLAYER_URL="http://localhost:${SERVER_PORT}/player/pwa/"
 
 # ---------------------------------------------------------------------------
 # Defaults (overridden by config.json)
 # ---------------------------------------------------------------------------
-CMS_URL="https://your-cms.example.com:8081/player/pwa/"
+CMS_URL=""
 BROWSER="chromium"
 DISPLAY_KEY=""
 EXTRA_BROWSER_FLAGS=""
@@ -39,23 +47,20 @@ if [[ -f "$CONFIG_FILE" ]]; then
 else
     # First run — create default config from template
     mkdir -p "$CONFIG_DIR"
-    if [[ -f /usr/share/xiboplayer/config.json.example ]]; then
-        cp /usr/share/xiboplayer/config.json.example "$CONFIG_FILE"
+    if [[ -f /usr/share/xiboplayer-chromium/config.json.example ]]; then
+        cp /usr/share/xiboplayer-chromium/config.json.example "$CONFIG_FILE"
         echo "[xiboplayer] Created default config at $CONFIG_FILE — edit cmsUrl and restart." >&2
+        exit 0
     else
-        echo "[xiboplayer] WARNING: No config at $CONFIG_FILE, using defaults." >&2
+        echo "[xiboplayer] ERROR: No config at $CONFIG_FILE and no template found." >&2
+        exit 1
     fi
 fi
 
-# Append display key to URL if set
-PLAYER_URL="$CMS_URL"
-if [[ -n "$DISPLAY_KEY" ]]; then
-    # Add as query parameter
-    if [[ "$PLAYER_URL" == *"?"* ]]; then
-        PLAYER_URL="${PLAYER_URL}&displayKey=${DISPLAY_KEY}"
-    else
-        PLAYER_URL="${PLAYER_URL}?displayKey=${DISPLAY_KEY}"
-    fi
+if [[ -z "$CMS_URL" || "$CMS_URL" == "https://your-cms.example.com" ]]; then
+    echo "[xiboplayer] ERROR: cmsUrl not configured." >&2
+    echo "[xiboplayer]   Edit $CONFIG_FILE and set cmsUrl to your CMS address." >&2
+    exit 1
 fi
 
 # ---------------------------------------------------------------------------
@@ -64,9 +69,19 @@ fi
 cleanup() {
     local exit_code=$?
     echo "[xiboplayer] Shutting down (exit code: $exit_code)..." >&2
+    # Stop the local server
+    if [[ -f "$SERVER_PID_FILE" ]]; then
+        local srv_pid
+        srv_pid=$(cat "$SERVER_PID_FILE" 2>/dev/null || echo "")
+        if [[ -n "$srv_pid" ]] && kill -0 "$srv_pid" 2>/dev/null; then
+            kill "$srv_pid" 2>/dev/null || true
+            echo "[xiboplayer] Stopped local server (PID $srv_pid)." >&2
+        fi
+        rm -f "$SERVER_PID_FILE"
+    fi
     rm -f "$LOCK_FILE"
     restore_screen_blanking
-    # Kill any child browser processes in our process group
+    # Kill any child processes in our process group
     kill -- -$$ 2>/dev/null || true
     exit "$exit_code"
 }
@@ -89,14 +104,12 @@ trap cleanup EXIT INT TERM HUP
 # ---------------------------------------------------------------------------
 disable_screen_blanking() {
     if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
-        # GNOME on Wayland
         if command -v gsettings &>/dev/null; then
             gsettings set org.gnome.desktop.session idle-delay 0 2>/dev/null || true
             gsettings set org.gnome.desktop.screensaver lock-enabled false 2>/dev/null || true
             gsettings set org.gnome.desktop.screensaver idle-activation-enabled false 2>/dev/null || true
             echo "[xiboplayer] Disabled GNOME screen blanking (Wayland)." >&2
         fi
-        # KDE on Wayland
         if command -v kwriteconfig5 &>/dev/null; then
             kwriteconfig5 --file powermanagementprofilesrc \
                 --group AC --group DPMSControl --key idleTime 0 2>/dev/null || true
@@ -105,7 +118,6 @@ disable_screen_blanking() {
     fi
 
     if [[ -n "${DISPLAY:-}" ]]; then
-        # X11: use xset to disable screen saver and DPMS
         if command -v xset &>/dev/null; then
             xset s off 2>/dev/null || true
             xset s noblank 2>/dev/null || true
@@ -116,7 +128,6 @@ disable_screen_blanking() {
 }
 
 restore_screen_blanking() {
-    # Restore DPMS defaults on exit (optional, kiosk usually stays running)
     if [[ -n "${DISPLAY:-}" ]] && command -v xset &>/dev/null; then
         xset +dpms 2>/dev/null || true
         xset s on 2>/dev/null || true
@@ -147,14 +158,7 @@ resolve_browser() {
                 fi
             done
             ;;
-        firefox)
-            if command -v firefox &>/dev/null; then
-                echo "firefox"
-                return
-            fi
-            ;;
         *)
-            # Treat as literal binary name
             if command -v "$browser_lower" &>/dev/null; then
                 echo "$browser_lower"
                 return
@@ -166,7 +170,42 @@ resolve_browser() {
 }
 
 # ---------------------------------------------------------------------------
-# Build browser arguments
+# Start local server
+# ---------------------------------------------------------------------------
+start_server() {
+    if ! command -v node &>/dev/null; then
+        echo "[xiboplayer] ERROR: Node.js is required. Install: sudo dnf install nodejs" >&2
+        exit 1
+    fi
+
+    echo "[xiboplayer] Starting local server on port $SERVER_PORT..." >&2
+    node "$SERVER_DIR/server.js" --port="$SERVER_PORT" &
+    local srv_pid=$!
+    echo "$srv_pid" > "$SERVER_PID_FILE"
+
+    # Wait for server to be ready (up to 10 seconds)
+    local retries=0
+    while (( retries < 50 )); do
+        if curl -s -o /dev/null "http://localhost:${SERVER_PORT}/" 2>/dev/null; then
+            echo "[xiboplayer] Server ready (PID $srv_pid)." >&2
+            return 0
+        fi
+        # Check if server process died
+        if ! kill -0 "$srv_pid" 2>/dev/null; then
+            echo "[xiboplayer] ERROR: Server process died." >&2
+            return 1
+        fi
+        sleep 0.2
+        retries=$((retries + 1))
+    done
+
+    echo "[xiboplayer] ERROR: Server did not start within 10 seconds." >&2
+    kill "$srv_pid" 2>/dev/null || true
+    return 1
+}
+
+# ---------------------------------------------------------------------------
+# Build Chromium arguments
 # ---------------------------------------------------------------------------
 build_chromium_args() {
     local -a args=(
@@ -194,34 +233,11 @@ build_chromium_args() {
 
     # Append any user-defined extra flags
     if [[ -n "$EXTRA_BROWSER_FLAGS" ]]; then
-        # Split extra flags by space (allows quoted values in config.env)
         read -ra extra <<< "$EXTRA_BROWSER_FLAGS"
         args+=("${extra[@]}")
     fi
 
-    # URL must be last
-    args+=("$PLAYER_URL")
-
-    echo "${args[@]}"
-}
-
-build_firefox_args() {
-    local -a args=(
-        --kiosk
-        --no-remote
-    )
-
-    # Dedicated profile directory
-    local data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/xiboplayer"
-    args+=(--profile "$data_dir/firefox-profile")
-
-    # Append any user-defined extra flags
-    if [[ -n "$EXTRA_BROWSER_FLAGS" ]]; then
-        read -ra extra <<< "$EXTRA_BROWSER_FLAGS"
-        args+=("${extra[@]}")
-    fi
-
-    # URL must be last
+    # URL must be last — point at local server, not remote CMS
     args+=("$PLAYER_URL")
 
     echo "${args[@]}"
@@ -231,9 +247,10 @@ build_firefox_args() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
-    echo "[xiboplayer] Starting Xibo PWA Kiosk Player" >&2
-    echo "[xiboplayer]   URL:     $PLAYER_URL" >&2
+    echo "[xiboplayer] Starting Xibo Player (self-contained)" >&2
+    echo "[xiboplayer]   CMS:     $CMS_URL" >&2
     echo "[xiboplayer]   Browser: $BROWSER" >&2
+    echo "[xiboplayer]   Server:  http://localhost:$SERVER_PORT" >&2
 
     # Wait for display to be available (important for systemd startup)
     local retries=0
@@ -251,41 +268,33 @@ main() {
     # Disable screen blanking
     disable_screen_blanking
 
+    # Start the local server (serves PWA + proxies CMS)
+    start_server || exit 1
+
     # Resolve browser binary
     local browser_bin
     browser_bin=$(resolve_browser)
     if [[ -z "$browser_bin" ]]; then
         echo "[xiboplayer] ERROR: Browser '$BROWSER' not found." >&2
-        echo "[xiboplayer]   Install it with: sudo dnf install chromium" >&2
+        echo "[xiboplayer]   Install: sudo dnf install chromium" >&2
         exit 1
     fi
     echo "[xiboplayer]   Binary:  $browser_bin" >&2
 
-    # Create profile directories
+    # Create profile directory
     local data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/xiboplayer"
     mkdir -p "$data_dir/chromium-profile" 2>/dev/null || true
-    mkdir -p "$data_dir/firefox-profile" 2>/dev/null || true
 
     # Build arguments and launch
     local args
-    local browser_lower
-    browser_lower=$(echo "$BROWSER" | tr '[:upper:]' '[:lower:]')
-
-    case "$browser_lower" in
-        firefox)
-            args=$(build_firefox_args)
-            ;;
-        *)
-            args=$(build_chromium_args)
-            ;;
-    esac
+    args=$(build_chromium_args)
 
     echo "[xiboplayer]   Args:    $args" >&2
     echo "[xiboplayer] Launching browser..." >&2
 
     # Execute the browser — this blocks until the browser exits.
     # shellcheck disable=SC2086
-    exec "$browser_bin" $args
+    "$browser_bin" $args
 }
 
 main "$@"

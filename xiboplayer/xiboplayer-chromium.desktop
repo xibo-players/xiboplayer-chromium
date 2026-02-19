@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=XiboPlayer Chromium
+GenericName=Digital Signage Player
+Comment=Self-contained Xibo digital signage player (Chromium kiosk)
+Exec=xiboplayer-chromium
+Icon=xiboplayer
+Terminal=false
+Categories=Utility;
+Keywords=signage;digital;kiosk;xibo;
+StartupNotify=true
