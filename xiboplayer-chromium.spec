@@ -1,8 +1,8 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.3.1
-Release:        4%{?dist}
+Version:        0.3.4
+Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
 License:        AGPL-3.0-or-later
@@ -107,6 +107,11 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Thu Feb 20 2026 Pau Aliagas <linuxnow@gmail.com> - 0.3.4-1
+- Bump to 0.3.4 (unified versioning across all packages)
+- Pick up SDK 0.3.4 with RSA key generation (@xiboplayer/crypto)
+- Pick up PWA 0.3.4 with crypto dependency
+
 * Thu Feb 20 2026 Pau Aliagas <linuxnow@gmail.com> - 0.3.1-4
 - Remove broken layout navigation keys
 - Document keyboard shortcuts (T/D/V) in README
