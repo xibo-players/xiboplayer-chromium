@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.3.0
+Version:        0.3.1
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -107,6 +107,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Thu Feb 20 2026 Pau Aliagas <linuxnow@gmail.com> - 0.3.1-1
+- Rebuild to pick up @xiboplayer/pwa 0.3.2 (fix missing dist/)
+
 * Thu Feb 20 2026 Pau Aliagas <linuxnow@gmail.com> - 0.3.0-1
 - Bump SDK dependencies to 0.3.0 (SW refactored into @xiboplayer/sw)
 
