@@ -2,7 +2,7 @@
 
 Name:           xiboplayer-chromium
 Version:        0.3.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
 License:        AGPL-3.0-or-later
@@ -107,6 +107,11 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Thu Feb 20 2026 Pau Aliagas <linuxnow@gmail.com> - 0.3.1-2
+- Fix quoting of --auto-select-desktop-capture-source="Entire screen"
+- Remove cmsUrl requirement — PWA setup page handles registration on first run
+- Simplify config.json template (browser + extraBrowserFlags only)
+
 * Thu Feb 20 2026 Pau Aliagas <linuxnow@gmail.com> - 0.3.1-1
 - Rebuild to pick up @xiboplayer/pwa 0.3.2 (fix missing dist/)
 

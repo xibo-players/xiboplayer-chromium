@@ -1,6 +1,4 @@
 {
-  "cmsUrl": "https://your-cms.example.com",
   "browser": "chromium",
-  "displayKey": "",
   "extraBrowserFlags": ""
 }

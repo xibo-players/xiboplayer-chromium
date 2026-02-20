@@ -6,7 +6,7 @@
 # CMS API requests, then launches Chromium in kiosk mode pointing at localhost.
 #
 # The PWA player files and server are bundled in the RPM — no external PWA
-# server is needed. Only the CMS base URL is required in the config.
+# server is needed. The PWA setup page handles CMS registration on first run.
 # =============================================================================
 
 set -euo pipefail
@@ -26,9 +26,7 @@ PLAYER_URL="http://localhost:${SERVER_PORT}/player/pwa/"
 # ---------------------------------------------------------------------------
 # Defaults (overridden by config.json)
 # ---------------------------------------------------------------------------
-CMS_URL=""
 BROWSER="chromium"
-DISPLAY_KEY=""
 EXTRA_BROWSER_FLAGS=""
 
 # ---------------------------------------------------------------------------
@@ -40,27 +38,15 @@ if ! command -v jq &>/dev/null; then
 fi
 
 if [[ -f "$CONFIG_FILE" ]]; then
-    CMS_URL=$(jq -r '.cmsUrl // empty' "$CONFIG_FILE" 2>/dev/null) || true
     BROWSER=$(jq -r '.browser // "chromium"' "$CONFIG_FILE" 2>/dev/null) || true
-    DISPLAY_KEY=$(jq -r '.displayKey // empty' "$CONFIG_FILE" 2>/dev/null) || true
     EXTRA_BROWSER_FLAGS=$(jq -r '.extraBrowserFlags // empty' "$CONFIG_FILE" 2>/dev/null) || true
 else
-    # First run — create default config from template
+    # First run — create config directory (PWA setup page handles CMS registration)
     mkdir -p "$CONFIG_DIR"
     if [[ -f /usr/share/xiboplayer-chromium/config.json.example ]]; then
         cp /usr/share/xiboplayer-chromium/config.json.example "$CONFIG_FILE"
-        echo "[xiboplayer] Created default config at $CONFIG_FILE — edit cmsUrl and restart." >&2
-        exit 0
-    else
-        echo "[xiboplayer] ERROR: No config at $CONFIG_FILE and no template found." >&2
-        exit 1
+        echo "[xiboplayer] Created default config at $CONFIG_FILE" >&2
     fi
-fi
-
-if [[ -z "$CMS_URL" || "$CMS_URL" == "https://your-cms.example.com" ]]; then
-    echo "[xiboplayer] ERROR: cmsUrl not configured." >&2
-    echo "[xiboplayer]   Edit $CONFIG_FILE and set cmsUrl to your CMS address." >&2
-    exit 1
 fi
 
 # ---------------------------------------------------------------------------
@@ -208,7 +194,7 @@ start_server() {
 # Build Chromium arguments
 # ---------------------------------------------------------------------------
 build_chromium_args() {
-    local -a args=(
+    BROWSER_ARGS=(
         --kiosk
         --no-first-run
         --disable-translate
@@ -225,23 +211,22 @@ build_chromium_args() {
         --disable-features=TranslateUI
         --disable-ipc-flooding-protection
         --password-store=basic
-        --auto-select-desktop-capture-source="Entire screen"
+        "--auto-select-desktop-capture-source=Entire screen"
     )
 
     # XDG-compliant profile directory
     local data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/xiboplayer"
-    args+=(--user-data-dir="$data_dir/chromium-profile")
+    BROWSER_ARGS+=(--user-data-dir="$data_dir/chromium-profile")
 
     # Append any user-defined extra flags
     if [[ -n "$EXTRA_BROWSER_FLAGS" ]]; then
+        local -a extra
         read -ra extra <<< "$EXTRA_BROWSER_FLAGS"
-        args+=("${extra[@]}")
+        BROWSER_ARGS+=("${extra[@]}")
     fi
 
     # URL must be last — point at local server, not remote CMS
-    args+=("$PLAYER_URL")
-
-    echo "${args[@]}"
+    BROWSER_ARGS+=("$PLAYER_URL")
 }
 
 # ---------------------------------------------------------------------------
@@ -249,7 +234,6 @@ build_chromium_args() {
 # ---------------------------------------------------------------------------
 main() {
     echo "[xiboplayer] Starting Xibo Player (self-contained)" >&2
-    echo "[xiboplayer]   CMS:     $CMS_URL" >&2
     echo "[xiboplayer]   Browser: $BROWSER" >&2
     echo "[xiboplayer]   Server:  http://localhost:$SERVER_PORT" >&2
 
@@ -287,15 +271,13 @@ main() {
     mkdir -p "$data_dir/chromium-profile" 2>/dev/null || true
 
     # Build arguments and launch
-    local args
-    args=$(build_chromium_args)
+    build_chromium_args
 
-    echo "[xiboplayer]   Args:    $args" >&2
+    echo "[xiboplayer]   Args:    ${BROWSER_ARGS[*]}" >&2
     echo "[xiboplayer] Launching browser..." >&2
 
     # Execute the browser — this blocks until the browser exits.
-    # shellcheck disable=SC2086
-    "$browser_bin" $args
+    "$browser_bin" "${BROWSER_ARGS[@]}"
 }
 
 main "$@"
