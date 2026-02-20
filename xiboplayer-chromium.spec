@@ -2,7 +2,7 @@
 
 Name:           xiboplayer-chromium
 Version:        0.3.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
 License:        AGPL-3.0-or-later
@@ -107,6 +107,11 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Thu Feb 20 2026 Pau Aliagas <linuxnow@gmail.com> - 0.3.1-3
+- Disable translate via enterprise policy (kiosk.json)
+- Add --lang=en-US and --disable-features=Translate flags
+- Pick up @xiboplayer/pwa 0.3.3 (overlays disabled by default, notranslate meta)
+
 * Thu Feb 20 2026 Pau Aliagas <linuxnow@gmail.com> - 0.3.1-2
 - Fix quoting of --auto-select-desktop-capture-source="Entire screen"
 - Remove cmsUrl requirement — PWA setup page handles registration on first run
