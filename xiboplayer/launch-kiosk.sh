@@ -208,9 +208,10 @@ build_chromium_args() {
         --overscroll-history-navigation=0
         --autoplay-policy=no-user-gesture-required
         --check-for-update-interval=31536000
-        --disable-features=TranslateUI
+        --disable-features=TranslateUI,Translate
         --disable-ipc-flooding-protection
         --password-store=basic
+        --lang=en-US
         "--auto-select-desktop-capture-source=Entire screen"
     )
 
@@ -266,9 +267,20 @@ main() {
     fi
     echo "[xiboplayer]   Binary:  $browser_bin" >&2
 
-    # Create profile directory
+    # Create profile directory and kiosk policies
     local data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/xiboplayer"
-    mkdir -p "$data_dir/chromium-profile" 2>/dev/null || true
+    mkdir -p "$data_dir/chromium-profile/policies/managed" 2>/dev/null || true
+    cat > "$data_dir/chromium-profile/policies/managed/kiosk.json" << 'POLICY'
+{
+  "TranslateEnabled": false,
+  "AutoFillEnabled": false,
+  "PasswordManagerEnabled": false,
+  "SearchSuggestEnabled": false,
+  "MetricsReportingEnabled": false,
+  "SpellCheckServiceEnabled": false,
+  "DownloadRestrictions": 3
+}
+POLICY
 
     # Build arguments and launch
     build_chromium_args
