@@ -10,7 +10,7 @@ Self-contained Xibo digital signage player for kiosk deployments on Fedora, RHEL
 - Auto-restarts the browser if it crashes
 - Disables screen blanking and DPMS (X11 and Wayland)
 - Starts automatically on user login via a systemd user service
-- Only the **CMS base URL** is needed in the config
+- First-run setup page — enter CMS URL, key, and display name in the browser
 
 ## Architecture
 
@@ -60,25 +60,31 @@ sudo dnf install dist/xiboplayer-chromium-*.noarch.rpm
 
 ## Configuration
 
-On first run, a config file is created at `~/.config/xiboplayer/config.json`:
+On first run, Chromium opens the PWA setup page where you enter your CMS URL, key, and display name. No manual config editing needed.
+
+An optional config file at `~/.config/xiboplayer/config.json` controls browser settings:
 
 ```json
 {
-  "cmsUrl": "https://your-cms.example.com",
   "browser": "chromium",
-  "displayKey": "",
   "extraBrowserFlags": ""
 }
 ```
 
-### Settings
+| Key | Description |
+|-----|-------------|
+| `browser` | Browser binary: `chromium` (default) or `google-chrome-stable` |
+| `extraBrowserFlags` | Additional Chromium flags (space-separated) |
 
-| Key | Required | Description |
-|-----|----------|-------------|
-| `cmsUrl` | Yes | CMS base URL (e.g., `https://cms.example.com`) |
-| `browser` | No | Browser binary: `chromium` (default) or `google-chrome-stable` |
-| `displayKey` | No | Hardware key override for display registration |
-| `extraBrowserFlags` | No | Additional Chromium flags (space-separated) |
+## Keyboard Shortcuts
+
+All overlays and controls are hidden by default for clean kiosk operation.
+
+| Key | Action |
+|-----|--------|
+| `T` | Toggle timeline overlay — shows upcoming scheduled layouts |
+| `D` | Toggle download overlay — shows media download progress |
+| `V` | Toggle video controls — show/hide native browser controls on all videos |
 
 ## Usage
 
