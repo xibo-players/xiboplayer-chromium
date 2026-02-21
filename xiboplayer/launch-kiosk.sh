@@ -278,7 +278,8 @@ main() {
   "SearchSuggestEnabled": false,
   "MetricsReportingEnabled": false,
   "SpellCheckServiceEnabled": false,
-  "DownloadRestrictions": 3
+  "DownloadRestrictions": 3,
+  "DefaultGeolocationSetting": 1
 }
 POLICY
 
