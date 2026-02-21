@@ -82,9 +82,15 @@ All overlays and controls are hidden by default for clean kiosk operation.
 
 | Key | Action |
 |-----|--------|
-| `T` | Toggle timeline overlay — shows upcoming scheduled layouts |
+| `T` | Toggle timeline overlay — shows upcoming scheduled layouts with conflict indicators |
 | `D` | Toggle download overlay — shows media download progress |
 | `V` | Toggle video controls — show/hide native browser controls on all videos |
+| `→` / `PageDown` | Skip to next layout |
+| `←` / `PageUp` | Go to previous layout |
+| `Space` | Pause / resume playback |
+| `R` | Revert to scheduled layout (when manually overridden) |
+
+Timeline overlay also supports **click-to-skip** — click any layout in the timeline to jump directly to it.
 
 ## Usage
 
