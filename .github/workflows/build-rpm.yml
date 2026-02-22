@@ -15,7 +15,6 @@ jobs:
       package-name: xiboplayer-chromium
       rpm-spec: 'xiboplayer-chromium.spec'
       rpm-script: 'build-rpm.sh'
-      default-version: '0.3.0'
       arch-matrix: '["x86_64"]'
       gpg-sign: true
       publish-to-repo: true
