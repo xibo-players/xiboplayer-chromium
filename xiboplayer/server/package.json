@@ -4,7 +4,7 @@
   "private": true,
   "description": "Local HTTP server for xiboplayer-chromium (serves PWA + proxies CMS)",
   "dependencies": {
-    "@xiboplayer/proxy": "^0.3.0",
-    "@xiboplayer/pwa": "^0.3.0"
+    "@xiboplayer/proxy": "^0.4.0",
+    "@xiboplayer/pwa": "^0.4.0"
   }
 }

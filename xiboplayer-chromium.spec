@@ -2,7 +2,7 @@
 
 Name:           xiboplayer-chromium
 Version:        0.4.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
 License:        AGPL-3.0-or-later
@@ -107,6 +107,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Sat Feb 22 2026 Pau Aliagas <linuxnow@gmail.com> - 0.4.1-2
+- Fix @xiboplayer/pwa dependency range to pull 0.4.x from npm
+
 * Sun Feb 22 2026 Pau Aliagas <linuxnow@gmail.com> - 0.4.1-1
 - Fix timeline duration calculation, overlay alignment, and remaining-duration display
 
