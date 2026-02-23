@@ -21,7 +21,7 @@ SERVER_DIR="/usr/libexec/xiboplayer-chromium/server"
 
 # Server defaults
 SERVER_PORT=8765
-PLAYER_URL="http://localhost:${SERVER_PORT}/player/pwa/"
+PLAYER_URL="http://localhost:${SERVER_PORT}/player/"
 
 # ---------------------------------------------------------------------------
 # Defaults (overridden by config.json)
