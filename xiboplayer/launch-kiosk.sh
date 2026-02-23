@@ -54,6 +54,8 @@ fi
 # ---------------------------------------------------------------------------
 cleanup() {
     local exit_code=$?
+    # Disable trap to prevent re-entry when killing process group
+    trap - EXIT INT TERM HUP
     echo "[xiboplayer] Shutting down (exit code: $exit_code)..." >&2
     # Stop the local server
     if [[ -f "$SERVER_PID_FILE" ]]; then
