@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.4.1
+Version:        0.4.3
 Release:        2%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -107,6 +107,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Mon Feb 23 2026 Pau Aliagas <linuxnow@gmail.com> - 0.4.3-1
+- Bump to 0.4.3
+
 * Sat Feb 22 2026 Pau Aliagas <linuxnow@gmail.com> - 0.4.1-2
 - Fix @xiboplayer/pwa dependency range to pull 0.4.x from npm
 

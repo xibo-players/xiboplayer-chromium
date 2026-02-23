@@ -5,7 +5,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_NAME="xiboplayer-chromium"
-VERSION="${1:-0.4.1}"
+VERSION="${1:-0.4.3}"
 RELEASE="${2:-2}"
 
 echo "==> Building ${PKG_NAME}-${VERSION}-${RELEASE} RPM (self-contained)"
