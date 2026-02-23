@@ -6,7 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_NAME="xiboplayer-chromium"
 VERSION="${1:-0.4.5}"
-RELEASE="${2:-2}"
+RELEASE="${2:-3}"
 
 echo "==> Building ${PKG_NAME}-${VERSION}-${RELEASE} DEB (self-contained)"
 
@@ -71,11 +71,11 @@ Priority: optional
 Architecture: all
 Depends: chromium | google-chrome-stable, nodejs (>= 18), jq, curl, systemd
 Recommends: x11-xserver-utils, xdotool
-Maintainer: Pau Aliagas <pau@linuxnow.com>
+Maintainer: Pau Aliagas <linuxnow@gmail.com>
 Description: Self-contained Xibo digital signage player (Chromium kiosk)
  Bundles the PWA player locally and serves it via a Node.js server,
  then launches Chromium in kiosk mode. Only the CMS base URL is needed.
-Homepage: https://github.com/xibo-players/xiboplayer-chromium
+Homepage: https://xiboplayer.org
 EOF
 
 # postinst — register alternatives

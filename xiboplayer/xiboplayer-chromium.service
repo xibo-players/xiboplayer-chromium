@@ -1,6 +1,6 @@
 [Unit]
 Description=Xibo Digital Signage Player (Chromium Kiosk)
-Documentation=https://github.com/linuxnow/xiboplayer-chromium
+Documentation=https://github.com/xibo-players/xiboplayer-chromium
 After=graphical-session.target
 Wants=graphical-session.target
 PartOf=graphical-session.target
