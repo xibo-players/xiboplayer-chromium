@@ -60,7 +60,23 @@ sudo dnf install dist/xiboplayer-chromium-*.noarch.rpm
 
 ## Configuration
 
-On first run, Chromium opens the PWA setup page where you enter your CMS URL, key, and display name. No manual config editing needed.
+### CMS config — `config.json` (recommended for provisioning)
+
+Place a CMS config file at `~/.config/xiboplayer/chromium/config.json` before first launch:
+
+```json
+{
+  "cmsUrl": "https://your-cms.example.com",
+  "cmsKey": "your-cms-key",
+  "displayName": "Lobby Display"
+}
+```
+
+On first boot, the server reads this file and injects the CMS configuration into the PWA via localStorage. The player registers with the CMS and shows a setup screen while it waits for administrator authorization. Once authorized, it starts playing.
+
+If no config file is present, Chromium opens the PWA setup page where you enter your CMS URL, key, and display name interactively.
+
+### Browser config
 
 An optional config file at `~/.config/xiboplayer/config.json` controls browser settings:
 
