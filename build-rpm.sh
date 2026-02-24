@@ -52,12 +52,13 @@ sed -e "s/^Version:.*/Version:        ${VERSION}/" \
 echo "==> Running rpmbuild..."
 rpmbuild \
     --define "_topdir $BUILD_ROOT" \
-    -bb "$BUILD_ROOT/SPECS/${PKG_NAME}.spec"
+    -ba "$BUILD_ROOT/SPECS/${PKG_NAME}.spec"
 
 # Collect output
 DIST_DIR="${SCRIPT_DIR}/dist"
 mkdir -p "$DIST_DIR"
 find "$BUILD_ROOT/RPMS" -name "*.rpm" -exec cp -v {} "$DIST_DIR/" \;
+find "$BUILD_ROOT/SRPMS" -name "*.src.rpm" -exec cp -v {} "$DIST_DIR/" \;
 
 echo ""
 echo "==> Built:"

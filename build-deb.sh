@@ -114,3 +114,82 @@ echo "    Install: sudo apt install ${DIST_DIR}/${PKG_NAME}_${VERSION}-${RELEASE
 echo "    Enable:  systemctl --user enable --now ${PKG_NAME}.service"
 
 rm -rf "$BUILD_ROOT"
+
+# --- Build source package (once, arch-independent) ---
+SRC_MARKER="${DIST_DIR}/.source-built"
+if [ ! -f "$SRC_MARKER" ]; then
+    echo "==> Building source package..."
+    SRC_BUILD="${SCRIPT_DIR}/_srcbuild"
+    rm -rf "$SRC_BUILD"
+    SRC_NAME="${PKG_NAME}-${VERSION}"
+    mkdir -p "$SRC_BUILD"
+
+    # Create orig tarball from source files
+    ORIG_DIR="$SRC_BUILD/$SRC_NAME"
+    mkdir -p "$ORIG_DIR/server"
+    cp "$SCRIPT_DIR/xiboplayer/launch-kiosk.sh" "$ORIG_DIR/"
+    cp "$SCRIPT_DIR/xiboplayer/config.json" "$ORIG_DIR/"
+    cp "$SCRIPT_DIR/xiboplayer/xiboplayer-chromium.service" "$ORIG_DIR/"
+    cp "$SCRIPT_DIR/xiboplayer/xiboplayer-chromium.desktop" "$ORIG_DIR/"
+    cp "$SCRIPT_DIR/xiboplayer/xiboplayer.png" "$ORIG_DIR/"
+    cp "$SCRIPT_DIR/xiboplayer/server/server.js" "$ORIG_DIR/server/"
+    cp "$SCRIPT_DIR/xiboplayer/server/package.json" "$ORIG_DIR/server/"
+
+    cd "$SRC_BUILD"
+    tar czf "${PKG_NAME}_${VERSION}.orig.tar.gz" "$SRC_NAME"
+
+    # Create debian/ directory
+    mkdir -p "$ORIG_DIR/debian/source"
+    echo "3.0 (quilt)" > "$ORIG_DIR/debian/source/format"
+
+    cat > "$ORIG_DIR/debian/control" << EOF
+Source: ${PKG_NAME}
+Section: misc
+Priority: optional
+Maintainer: Pau Aliagas <linuxnow@gmail.com>
+Build-Depends: debhelper (>= 12), nodejs, npm
+Standards-Version: 4.6.0
+Homepage: https://xiboplayer.org
+
+Package: ${PKG_NAME}
+Architecture: all
+Depends: chromium | google-chrome-stable, nodejs (>= 18), jq, curl, systemd
+Recommends: x11-xserver-utils, xdotool
+Description: Self-contained Xibo digital signage player (Chromium kiosk)
+ Bundles the PWA player locally and serves it via a Node.js server,
+ then launches Chromium in kiosk mode. Only the CMS base URL is needed.
+EOF
+
+    cat > "$ORIG_DIR/debian/changelog" << EOF
+${PKG_NAME} (${VERSION}-${RELEASE}) stable; urgency=medium
+
+  * Release ${VERSION}
+
+ -- Pau Aliagas <linuxnow@gmail.com>  $(date -R)
+EOF
+
+    cat > "$ORIG_DIR/debian/rules" << 'EOF'
+#!/usr/bin/make -f
+%:
+	dh $@
+EOF
+    chmod +x "$ORIG_DIR/debian/rules"
+
+    echo "12" > "$ORIG_DIR/debian/compat"
+
+    # Build source package
+    cd "$ORIG_DIR"
+    dpkg-source -b .
+    cd "$SCRIPT_DIR"
+
+    # Copy source package files to output
+    cp "$SRC_BUILD"/*.dsc "$DIST_DIR/" 2>/dev/null || true
+    cp "$SRC_BUILD"/*.orig.tar.* "$DIST_DIR/" 2>/dev/null || true
+    cp "$SRC_BUILD"/*.debian.tar.* "$DIST_DIR/" 2>/dev/null || true
+
+    echo "==> Source package files:"
+    ls -lh "$DIST_DIR"/*.dsc "$DIST_DIR"/*.tar.* 2>/dev/null || true
+
+    touch "$SRC_MARKER"
+    rm -rf "$SRC_BUILD"
+fi
