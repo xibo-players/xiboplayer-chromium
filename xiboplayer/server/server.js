@@ -8,7 +8,7 @@
  * Installed by xiboplayer-chromium RPM/DEB at /usr/libexec/xiboplayer-chromium/server/
  *
  * Usage:
- *   node server.js [--port=8765] [--pwa-path=/path/to/pwa/dist]
+ *   node server.js [--port=8766] [--pwa-path=/path/to/pwa/dist]
  */
 
 const fs = require('fs');
@@ -21,17 +21,19 @@ const APP_VERSION = '0.2.0';
 const args = process.argv.slice(2);
 const portArg = args.find(a => a.startsWith('--port='));
 const pwaArg = args.find(a => a.startsWith('--pwa-path='));
-const serverPort = portArg ? parseInt(portArg.split('=')[1], 10) : 8765;
+// Port priority: CLI --port > config.json serverPort > default 8766
+let defaultPort = 8766;
 const pwaPath = pwaArg
   ? pwaArg.split('=')[1]
   : path.join(__dirname, 'node_modules/@xiboplayer/pwa/dist');
 
-// Read CMS config from config.json (if present) for setup-free kiosk deployment
+// Read config.json (if present) for CMS config and serverPort
 const configDir = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
 const configPath = path.join(configDir, 'xiboplayer', 'chromium', 'config.json');
 let cmsConfig;
 try {
   const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  if (config.serverPort) defaultPort = config.serverPort;
   if (config.cmsUrl) {
     cmsConfig = {
       cmsUrl: config.cmsUrl,
@@ -45,6 +47,8 @@ try {
     console.warn(`[Server] Failed to read config: ${err.message}`);
   }
 }
+
+const serverPort = portArg ? parseInt(portArg.split('=')[1], 10) : defaultPort;
 
 console.log(`[Server] PWA path: ${pwaPath}`);
 console.log(`[Server] Port: ${serverPort}`);

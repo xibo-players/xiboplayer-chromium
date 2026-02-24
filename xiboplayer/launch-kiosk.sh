@@ -19,9 +19,8 @@ SERVER_PID_FILE="/tmp/xiboplayer-server.pid"
 # Installed paths (RPM/DEB layout)
 SERVER_DIR="/usr/libexec/xiboplayer-chromium/server"
 
-# Server defaults
-SERVER_PORT=8765
-PLAYER_URL="http://localhost:${SERVER_PORT}/player/"
+# Server defaults (overridden by config.json "serverPort" or --port=XXXX)
+SERVER_PORT=8766
 
 # ---------------------------------------------------------------------------
 # Defaults (overridden by config.json)
@@ -40,6 +39,8 @@ fi
 if [[ -f "$CONFIG_FILE" ]]; then
     BROWSER=$(jq -r '.browser // "chromium"' "$CONFIG_FILE" 2>/dev/null) || true
     EXTRA_BROWSER_FLAGS=$(jq -r '.extraBrowserFlags // empty' "$CONFIG_FILE" 2>/dev/null) || true
+    CONFIG_PORT=$(jq -r '.serverPort // empty' "$CONFIG_FILE" 2>/dev/null) || true
+    [[ -n "$CONFIG_PORT" ]] && SERVER_PORT="$CONFIG_PORT"
 else
     # First run — create config directory (PWA setup page handles CMS registration)
     mkdir -p "$CONFIG_DIR"
@@ -48,6 +49,14 @@ else
         echo "[xiboplayer] Created default config at $CONFIG_FILE" >&2
     fi
 fi
+
+# CLI --port=XXXX overrides config.json
+for arg in "$@"; do
+    case "$arg" in
+        --port=*) SERVER_PORT="${arg#*=}" ;;
+    esac
+done
+PLAYER_URL="http://localhost:${SERVER_PORT}/player/"
 
 # No cmsUrl in config.json → unconfigured. Wipe stale browser data so
 # the PWA shows the setup screen instead of booting from ghost config.
