@@ -32,13 +32,13 @@ const configPath = path.join(configDir, 'xiboplayer', 'chromium', 'config.json')
 let cmsConfig;
 try {
   const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  if (config.cmsAddress) {
+  if (config.cmsUrl) {
     cmsConfig = {
-      cmsAddress: config.cmsAddress,
+      cmsUrl: config.cmsUrl,
       cmsKey: config.cmsKey || '',
       displayName: config.displayName || '',
     };
-    console.log(`[Server] CMS config loaded from ${configPath}: ${cmsConfig.cmsAddress}`);
+    console.log(`[Server] CMS config loaded from ${configPath}: ${cmsConfig.cmsUrl}`);
   }
 } catch (err) {
   if (err.code !== 'ENOENT') {
