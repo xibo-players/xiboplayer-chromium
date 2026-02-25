@@ -6,7 +6,7 @@ Self-contained Xibo digital signage player for kiosk deployments on Fedora, RHEL
 
 - **Bundles the PWA player** — no external PWA server needed
 - Runs a local Node.js server that serves the player and proxies CMS API requests
-- Launches Chromium in kiosk mode pointing at `http://localhost:8765`
+- Launches Chromium in kiosk mode pointing at `http://localhost:8766`
 - Auto-restarts the browser if it crashes
 - Disables screen blanking and DPMS (X11 and Wayland)
 - Starts automatically on user login via a systemd user service
@@ -17,11 +17,11 @@ Self-contained Xibo digital signage player for kiosk deployments on Fedora, RHEL
 ```
 ┌─────────────────────────────────────────┐
 │  Chromium (kiosk mode)                  │
-│  http://localhost:8765/player/pwa/      │
+│  http://localhost:8766/player/pwa/      │
 └───────────────┬─────────────────────────┘
                 │
 ┌───────────────▼─────────────────────────┐
-│  Node.js Server (localhost:8765)        │
+│  Node.js Server (localhost:8766)        │
 │  ├─ /player/pwa/*  → bundled PWA files  │
 │  ├─ /xmds-proxy    → CMS SOAP API      │
 │  ├─ /rest-proxy     → CMS REST API      │
@@ -75,6 +75,22 @@ Place a CMS config file at `~/.config/xiboplayer/chromium/config.json` before fi
 On first boot, the server reads this file and injects the CMS configuration into the PWA via localStorage. The player registers with the CMS and shows a setup screen while it waits for administrator authorization. Once authorized, it starts playing.
 
 If no config file is present, Chromium opens the PWA setup page where you enter your CMS URL, key, and display name interactively.
+
+### Auto-authorize via CMS API (optional)
+
+By default, new displays must be manually authorized by a CMS administrator. To skip this step, add OAuth2 API credentials to `config.json` — see the [PWA README](https://github.com/xibo-players/xiboplayer-pwa#auto-authorize-via-cms-api-optional) for full setup instructions including CMS Application configuration:
+
+```json
+{
+  "cmsUrl": "https://your-cms.example.com",
+  "cmsKey": "your-cms-key",
+  "displayName": "Lobby Display",
+  "apiClientId": "your-client-id",
+  "apiClientSecret": "your-client-secret"
+}
+```
+
+You can also enter the API credentials interactively in the setup page under "Auto-authorize via API".
 
 ### Browser config
 
