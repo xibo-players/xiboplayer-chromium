@@ -50,11 +50,16 @@ try {
 
 const serverPort = portArg ? parseInt(portArg.split('=')[1], 10) : defaultPort;
 
+// XDG-compliant data directory for DiskCache media storage
+const dataHome = process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share');
+const dataDir = path.join(dataHome, 'xiboplayer', 'chromium');
+
 console.log(`[Server] PWA path: ${pwaPath}`);
 console.log(`[Server] Port: ${serverPort}`);
+console.log(`[Server] Data dir: ${dataDir}`);
 
 import('@xiboplayer/proxy').then(({ startServer }) => {
-  return startServer({ port: serverPort, pwaPath, appVersion: APP_VERSION, cmsConfig, configFilePath: configPath });
+  return startServer({ port: serverPort, pwaPath, appVersion: APP_VERSION, cmsConfig, configFilePath: configPath, dataDir });
 }).catch((err) => {
   console.error('[Server] Failed to start:', err.message);
   process.exit(1);
