@@ -51,6 +51,10 @@ try {
     playerConfig.transport = config.transport;
     console.log(`[Server] Transport: ${config.transport}`);
   }
+  if (config.googleGeoApiKey) {
+    playerConfig.googleGeoApiKey = config.googleGeoApiKey;
+    console.log(`[Server] Google Geolocation API key: configured`);
+  }
 } catch (err) {
   if (err.code !== 'ENOENT') {
     console.warn(`[Server] Failed to read config: ${err.message}`);

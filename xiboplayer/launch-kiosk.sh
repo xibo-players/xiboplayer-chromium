@@ -41,6 +41,7 @@ if [[ -f "$CONFIG_FILE" ]]; then
     EXTRA_BROWSER_FLAGS=$(jq -r '.extraBrowserFlags // empty' "$CONFIG_FILE" 2>/dev/null) || true
     CONFIG_PORT=$(jq -r '.serverPort // empty' "$CONFIG_FILE" 2>/dev/null) || true
     [[ -n "$CONFIG_PORT" ]] && SERVER_PORT="$CONFIG_PORT"
+    GOOGLE_GEO_API_KEY=$(jq -r '.googleGeoApiKey // empty' "$CONFIG_FILE" 2>/dev/null) || true
 else
     # First run — create config directory (PWA setup page handles CMS registration)
     mkdir -p "$CONFIG_DIR"
@@ -71,6 +72,7 @@ if [[ -n "$INSTANCE" ]]; then
         [[ -n "$CONFIG_PORT" ]] && SERVER_PORT="$CONFIG_PORT"
         BROWSER=$(jq -r '.browser // "chromium"' "$CONFIG_FILE" 2>/dev/null) || true
         EXTRA_BROWSER_FLAGS=$(jq -r '.extraBrowserFlags // empty' "$CONFIG_FILE" 2>/dev/null) || true
+        GOOGLE_GEO_API_KEY=$(jq -r '.googleGeoApiKey // empty' "$CONFIG_FILE" 2>/dev/null) || true
     else
         mkdir -p "$CONFIG_DIR"
     fi
@@ -324,7 +326,7 @@ main() {
     [[ -n "$INSTANCE" ]] && data_suffix="chromium-${INSTANCE}"
     local data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/xiboplayer/${data_suffix}"
     mkdir -p "$data_dir/policies/managed" 2>/dev/null || true
-    cat > "$data_dir/policies/managed/kiosk.json" << 'POLICY'
+    cat > "$data_dir/policies/managed/kiosk.json" << POLICY
 {
   "TranslateEnabled": false,
   "AutoFillEnabled": false,
@@ -333,9 +335,19 @@ main() {
   "MetricsReportingEnabled": false,
   "SpellCheckServiceEnabled": false,
   "DownloadRestrictions": 3,
-  "DefaultGeolocationSetting": 1
+  "DefaultGeolocationSetting": 1,
+  "VideoCaptureAllowed": true,
+  "AudioCaptureAllowed": true,
+  "VideoCaptureAllowedUrls": ["http://localhost:${SERVER_PORT}"],
+  "AudioCaptureAllowedUrls": ["http://localhost:${SERVER_PORT}"]
 }
 POLICY
+
+    # Export Google Geolocation API key for the SDK (if configured)
+    if [[ -n "${GOOGLE_GEO_API_KEY:-}" ]]; then
+        export GOOGLE_GEO_API_KEY
+        echo "[xiboplayer]   Geo API: configured" >&2
+    fi
 
     # Build arguments and launch
     build_chromium_args

@@ -9,6 +9,8 @@
 
   "transport": "auto",
 
+  "googleGeoApiKey": "",
+
   "controls": {
     "keyboard": {
       "debugOverlays": false,
