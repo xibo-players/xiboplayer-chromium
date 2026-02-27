@@ -182,6 +182,13 @@ resolve_browser() {
                     return
                 fi
             done
+            # Fallback: config says chromium but only chrome is installed
+            for bin in google-chrome-stable google-chrome; do
+                if command -v "$bin" &>/dev/null; then
+                    echo "$bin"
+                    return
+                fi
+            done
             ;;
         chrome|google-chrome|google-chrome-stable)
             for bin in google-chrome-stable google-chrome chrome; do
