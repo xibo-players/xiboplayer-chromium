@@ -31,6 +31,7 @@ const pwaPath = pwaArg
 const configDir = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
 const configPath = path.join(configDir, 'xiboplayer', 'chromium', 'config.json');
 let cmsConfig;
+let playerConfig = {};
 try {
   const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   if (config.serverPort) defaultPort = config.serverPort;
@@ -41,6 +42,14 @@ try {
       displayName: config.displayName || '',
     };
     console.log(`[Server] CMS config loaded from ${configPath}: ${cmsConfig.cmsUrl}`);
+  }
+  if (config.controls) {
+    playerConfig.controls = config.controls;
+    console.log(`[Server] Controls config loaded:`, JSON.stringify(config.controls));
+  }
+  if (config.transport) {
+    playerConfig.transport = config.transport;
+    console.log(`[Server] Transport: ${config.transport}`);
   }
 } catch (err) {
   if (err.code !== 'ENOENT') {
@@ -59,7 +68,7 @@ console.log(`[Server] Port: ${serverPort}`);
 console.log(`[Server] Data dir: ${dataDir}`);
 
 import('@xiboplayer/proxy').then(({ startServer }) => {
-  return startServer({ port: serverPort, pwaPath, appVersion: APP_VERSION, cmsConfig, configFilePath: configPath, dataDir });
+  return startServer({ port: serverPort, pwaPath, appVersion: APP_VERSION, cmsConfig, configFilePath: configPath, dataDir, playerConfig });
 }).catch((err) => {
   console.error('[Server] Failed to start:', err.message);
   process.exit(1);

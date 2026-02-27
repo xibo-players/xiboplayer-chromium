@@ -1,0 +1,23 @@
+{
+  "browser": "chromium",
+  "extraBrowserFlags": "",
+  "serverPort": 8766,
+
+  "cmsUrl": "",
+  "cmsKey": "",
+  "displayName": "",
+
+  "transport": "auto",
+
+  "controls": {
+    "keyboard": {
+      "debugOverlays": false,
+      "setupKey": false,
+      "playbackControl": false,
+      "videoControls": false
+    },
+    "mouse": {
+      "statusBarOnHover": false
+    }
+  }
+}
