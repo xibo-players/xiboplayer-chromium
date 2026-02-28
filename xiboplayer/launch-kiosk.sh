@@ -85,6 +85,7 @@ for arg in "$@"; do
         --server-dir=*) SERVER_DIR="${arg#*=}" ;;
         --pwa-path=*) PWA_PATH="${arg#*=}" ;;
         --no-kiosk) KIOSK_MODE="false" ;;
+        --log-level=*) LOG_LEVEL="${arg#*=}" ;;
     esac
 done
 
@@ -102,6 +103,7 @@ if [[ -n "$INSTANCE" ]]; then
     fi
 fi
 PLAYER_URL="http://localhost:${SERVER_PORT}/player/"
+[[ -n "${LOG_LEVEL:-}" ]] && PLAYER_URL="${PLAYER_URL}?logLevel=${LOG_LEVEL}"
 
 # No cmsUrl in config.json → unconfigured. Wipe stale browser data so
 # the PWA shows the setup screen instead of booting from ghost config.
