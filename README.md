@@ -93,37 +93,55 @@ By default, new displays must be manually authorized by a CMS administrator. To 
 
 You can also enter the API credentials interactively in the setup page under "Auto-authorize via API".
 
-### Browser config
+### Display and kiosk settings
 
-An optional config file at `~/.config/xiboplayer/config.json` controls browser settings:
+All display settings can be configured in `config.json`:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `browser` | `"chromium"` | Browser binary: `chromium` or `google-chrome-stable` |
+| `extraBrowserFlags` | `""` | Additional Chromium flags (space-separated) |
+| `kioskMode` | `true` | Lock browser chrome (no address bar, tabs, or close button) |
+| `fullscreen` | `true` | Start in fullscreen (when kiosk mode is off) |
+| `hideMouseCursor` | `true` | Hide cursor after inactivity (requires `unclutter`) |
+| `preventSleep` | `true` | Disable screen blanking and DPMS |
+| `width` / `height` | `1920` / `1080` | Window size (when kiosk mode is off) |
+
+### Keyboard and mouse controls
+
+All keyboard shortcuts and mouse hover behavior are **disabled by default** for secure kiosk operation. Enable them in the `controls` section of `config.json`:
 
 ```json
 {
-  "browser": "chromium",
-  "extraBrowserFlags": ""
+  "controls": {
+    "keyboard": {
+      "debugOverlays": true,
+      "setupKey": true,
+      "playbackControl": true,
+      "videoControls": true
+    },
+    "mouse": {
+      "statusBarOnHover": true
+    }
+  }
 }
 ```
 
-| Key | Description |
-|-----|-------------|
-| `browser` | Browser binary: `chromium` (default) or `google-chrome-stable` |
-| `extraBrowserFlags` | Additional Chromium flags (space-separated) |
+When enabled, the following shortcuts are available:
 
-## Keyboard Shortcuts
+| Key | Group | Action |
+|-----|-------|--------|
+| `D` | `debugOverlays` | Toggle download progress overlay |
+| `T` | `debugOverlays` | Toggle timeline overlay (click-to-skip supported) |
+| `S` | `setupKey` | Toggle CMS setup screen |
+| `V` | `videoControls` | Toggle native `<video>` controls |
+| `→` / `PageDown` | `playbackControl` | Skip to next layout |
+| `←` / `PageUp` | `playbackControl` | Skip to previous layout |
+| `Space` | `playbackControl` | Pause / resume playback |
+| `R` | `playbackControl` | Revert to scheduled layout |
+| Media keys | `playbackControl` | Next/prev/pause/play (MediaSession API) |
 
-All overlays and controls are hidden by default for clean kiosk operation.
-
-| Key | Action |
-|-----|--------|
-| `T` | Toggle timeline overlay — shows upcoming scheduled layouts with conflict indicators |
-| `D` | Toggle download overlay — shows media download progress |
-| `V` | Toggle video controls — show/hide native browser controls on all videos |
-| `→` / `PageDown` | Skip to next layout |
-| `←` / `PageUp` | Go to previous layout |
-| `Space` | Pause / resume playback |
-| `R` | Revert to scheduled layout (when manually overridden) |
-
-Timeline overlay also supports **click-to-skip** — click any layout in the timeline to jump directly to it.
+See [CONFIG.md](CONFIG.md) for full configuration reference.
 
 ## Usage
 

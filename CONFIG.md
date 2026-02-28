@@ -13,19 +13,27 @@ cp config.json.example ~/.config/xiboplayer/chromium/config.json
 
 ```jsonc
 {
+  // CMS connection — set via Setup screen (S key) or here
+  "cmsUrl": "https://cms.example.com",
+  "cmsKey": "your-server-key",
+  "displayName": "Lobby Screen 1",
+
+  // Local server port (default: 8766)
+  "serverPort": 8766,
+
   // Browser engine (currently only "chromium")
   "browser": "chromium",
 
   // Extra flags passed to the Chromium process
   "extraBrowserFlags": "",
 
-  // Local server port (default: 8766)
-  "serverPort": 8766,
-
-  // CMS connection — set via Setup screen (S key) or here
-  "cmsUrl": "https://cms.example.com",
-  "cmsKey": "your-server-key",
-  "displayName": "Lobby Screen 1",
+  // Kiosk and display settings
+  "kioskMode": true,
+  "fullscreen": true,
+  "hideMouseCursor": true,
+  "preventSleep": true,
+  "width": 1920,
+  "height": 1080,
 
   // CMS transport: "auto" (default) or "xmds" (force SOAP for unpatched Xibo CMS)
   "transport": "auto",
@@ -47,6 +55,18 @@ cp config.json.example ~/.config/xiboplayer/chromium/config.json
   }
 }
 ```
+
+## Display Settings
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `kioskMode` | `true` | Chromium `--kiosk` flag — locks browser chrome completely |
+| `fullscreen` | `true` | `--start-fullscreen` (only when kiosk mode is off) |
+| `hideMouseCursor` | `true` | Hides cursor via `unclutter` (install: `sudo dnf install unclutter`) |
+| `preventSleep` | `true` | Disables screen blanking and DPMS (X11 `xset` + GNOME `gsettings`) |
+| `width` / `height` | `1920` / `1080` | Window size via `--window-size` (only when kiosk mode is off) |
+
+When `kioskMode` is `true`, `fullscreen` and `width`/`height` are ignored — Chromium's `--kiosk` flag takes over.
 
 ## Transport
 
