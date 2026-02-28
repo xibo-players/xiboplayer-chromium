@@ -27,6 +27,12 @@ SERVER_PORT=8766
 # ---------------------------------------------------------------------------
 BROWSER="chromium"
 EXTRA_BROWSER_FLAGS=""
+KIOSK_MODE="true"
+FULLSCREEN="true"
+HIDE_MOUSE_CURSOR="true"
+PREVENT_SLEEP="true"
+WINDOW_WIDTH="1920"
+WINDOW_HEIGHT="1080"
 
 # ---------------------------------------------------------------------------
 # Load configuration (JSON via jq)
@@ -36,12 +42,31 @@ if ! command -v jq &>/dev/null; then
     exit 1
 fi
 
+load_config() {
+    local file="$1"
+    BROWSER=$(jq -r '.browser // "chromium"' "$file" 2>/dev/null) || true
+    EXTRA_BROWSER_FLAGS=$(jq -r '.extraBrowserFlags // empty' "$file" 2>/dev/null) || true
+    local port; port=$(jq -r '.serverPort // empty' "$file" 2>/dev/null) || true
+    [[ -n "$port" ]] && SERVER_PORT="$port"
+    GOOGLE_GEO_API_KEY=$(jq -r '.googleGeoApiKey // empty' "$file" 2>/dev/null) || true
+    # Window / kiosk settings
+    local val
+    val=$(jq -r '.kioskMode // empty' "$file" 2>/dev/null) || true
+    [[ -n "$val" ]] && KIOSK_MODE="$val"
+    val=$(jq -r '.fullscreen // empty' "$file" 2>/dev/null) || true
+    [[ -n "$val" ]] && FULLSCREEN="$val"
+    val=$(jq -r '.hideMouseCursor // empty' "$file" 2>/dev/null) || true
+    [[ -n "$val" ]] && HIDE_MOUSE_CURSOR="$val"
+    val=$(jq -r '.preventSleep // empty' "$file" 2>/dev/null) || true
+    [[ -n "$val" ]] && PREVENT_SLEEP="$val"
+    val=$(jq -r '.width // empty' "$file" 2>/dev/null) || true
+    [[ -n "$val" ]] && WINDOW_WIDTH="$val"
+    val=$(jq -r '.height // empty' "$file" 2>/dev/null) || true
+    [[ -n "$val" ]] && WINDOW_HEIGHT="$val"
+}
+
 if [[ -f "$CONFIG_FILE" ]]; then
-    BROWSER=$(jq -r '.browser // "chromium"' "$CONFIG_FILE" 2>/dev/null) || true
-    EXTRA_BROWSER_FLAGS=$(jq -r '.extraBrowserFlags // empty' "$CONFIG_FILE" 2>/dev/null) || true
-    CONFIG_PORT=$(jq -r '.serverPort // empty' "$CONFIG_FILE" 2>/dev/null) || true
-    [[ -n "$CONFIG_PORT" ]] && SERVER_PORT="$CONFIG_PORT"
-    GOOGLE_GEO_API_KEY=$(jq -r '.googleGeoApiKey // empty' "$CONFIG_FILE" 2>/dev/null) || true
+    load_config "$CONFIG_FILE"
 else
     # First run — create config directory (PWA setup page handles CMS registration)
     mkdir -p "$CONFIG_DIR"
@@ -59,7 +84,7 @@ for arg in "$@"; do
         --instance=*) INSTANCE="${arg#*=}" ;;
         --server-dir=*) SERVER_DIR="${arg#*=}" ;;
         --pwa-path=*) PWA_PATH="${arg#*=}" ;;
-        --no-kiosk) NO_KIOSK=1 ;;
+        --no-kiosk) KIOSK_MODE="false" ;;
     esac
 done
 
@@ -71,11 +96,7 @@ if [[ -n "$INSTANCE" ]]; then
     SERVER_PID_FILE="/tmp/xiboplayer-server-${INSTANCE}.pid"
     # Re-read config from the instance-specific path
     if [[ -f "$CONFIG_FILE" ]]; then
-        CONFIG_PORT=$(jq -r '.serverPort // empty' "$CONFIG_FILE" 2>/dev/null) || true
-        [[ -n "$CONFIG_PORT" ]] && SERVER_PORT="$CONFIG_PORT"
-        BROWSER=$(jq -r '.browser // "chromium"' "$CONFIG_FILE" 2>/dev/null) || true
-        EXTRA_BROWSER_FLAGS=$(jq -r '.extraBrowserFlags // empty' "$CONFIG_FILE" 2>/dev/null) || true
-        GOOGLE_GEO_API_KEY=$(jq -r '.googleGeoApiKey // empty' "$CONFIG_FILE" 2>/dev/null) || true
+        load_config "$CONFIG_FILE"
     else
         mkdir -p "$CONFIG_DIR"
     fi
@@ -278,8 +299,13 @@ build_chromium_args() {
         --disable-renderer-backgrounding
     )
 
-    # Kiosk mode (skip with --no-kiosk for development)
-    [[ -z "${NO_KIOSK:-}" ]] && BROWSER_ARGS=(--kiosk "${BROWSER_ARGS[@]}")
+    # Kiosk / fullscreen / window size
+    if [[ "$KIOSK_MODE" == "true" ]]; then
+        BROWSER_ARGS=(--kiosk "${BROWSER_ARGS[@]}")
+    else
+        [[ "$FULLSCREEN" == "true" ]] && BROWSER_ARGS+=(--start-fullscreen)
+        BROWSER_ARGS+=(--window-size="${WINDOW_WIDTH},${WINDOW_HEIGHT}")
+    fi
 
     # XDG-compliant profile directory (instance-aware)
     local data_suffix="chromium"
@@ -306,6 +332,7 @@ main() {
     [[ -n "$INSTANCE" ]] && echo "[xiboplayer]   Instance: $INSTANCE" >&2
     echo "[xiboplayer]   Browser: $BROWSER" >&2
     echo "[xiboplayer]   Server:  http://localhost:$SERVER_PORT" >&2
+    echo "[xiboplayer]   Kiosk:   $KIOSK_MODE  Fullscreen: $FULLSCREEN  Sleep: $PREVENT_SLEEP  Cursor: $([[ $HIDE_MOUSE_CURSOR == true ]] && echo hidden || echo visible)" >&2
 
     # Wait for display to be available (important for systemd startup)
     local retries=0
@@ -320,8 +347,21 @@ main() {
         exit 1
     fi
 
-    # Disable screen blanking
-    disable_screen_blanking
+    # Disable screen blanking (if configured)
+    if [[ "$PREVENT_SLEEP" == "true" ]]; then
+        disable_screen_blanking
+    fi
+
+    # Hide mouse cursor (if configured)
+    if [[ "$HIDE_MOUSE_CURSOR" == "true" ]]; then
+        if command -v unclutter &>/dev/null; then
+            unclutter --timeout 1 --jitter 2 --hide-on-touch &
+            echo "[xiboplayer] Mouse cursor hidden (unclutter)." >&2
+        else
+            echo "[xiboplayer] WARNING: unclutter not found, cursor will be visible." >&2
+            echo "[xiboplayer]   Install: sudo dnf install unclutter" >&2
+        fi
+    fi
 
     # Start the local server (serves PWA + proxies CMS)
     start_server || exit 1

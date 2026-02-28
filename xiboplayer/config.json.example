@@ -1,14 +1,20 @@
 {
-  "browser": "chromium",
-  "extraBrowserFlags": "",
-  "serverPort": 8766,
-
   "cmsUrl": "",
   "cmsKey": "",
   "displayName": "",
 
-  "transport": "auto",
+  "serverPort": 8766,
+  "browser": "chromium",
+  "extraBrowserFlags": "",
 
+  "kioskMode": true,
+  "fullscreen": true,
+  "hideMouseCursor": true,
+  "preventSleep": true,
+  "width": 1920,
+  "height": 1080,
+
+  "transport": "auto",
   "googleGeoApiKey": "",
 
   "controls": {
