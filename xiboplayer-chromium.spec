@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.5.19
+Version:        0.5.20
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -118,6 +118,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Sun Mar 01 2026 Pau Aliagas <linuxnow@gmail.com> - 0.5.20-1
+- Fix memory leaks: PDF single-canvas rendering with page.cleanup(), event listener cleanup on widget hide, HLS instance destroy, blob URL tracking
+
 * Sat Feb 28 2026 Pau Aliagas <linuxnow@gmail.com> - 0.5.19-1
 - PDF multi-page cycling, SSL cert relaxation (relaxSslCerts), configurable log levels, config passthrough fixes
 
