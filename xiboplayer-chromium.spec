@@ -119,10 +119,10 @@ fi
 
 %changelog
 * Sat Feb 28 2026 Pau Aliagas <linuxnow@gmail.com> - 0.5.18-1
-- Fix
+- Fix proxy crash, improve kill patterns, forward proxy logs to DevTools
 
 * Sat Feb 28 2026 Pau Aliagas <linuxnow@gmail.com> - 0.5.17-1
-- Decouple
+- Decouple Chromium from SDK monorepo, fix cache clearing
 
 * Fri Feb 28 2026 Pau Aliagas <linuxnow@gmail.com> - 0.5.16-4
 - Fall back to Google Chrome when Chromium binary is not found
