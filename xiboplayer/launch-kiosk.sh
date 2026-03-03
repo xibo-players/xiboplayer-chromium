@@ -42,31 +42,28 @@ if ! command -v jq &>/dev/null; then
     exit 1
 fi
 
+# Read a JSON key from config, setting the named shell variable if present.
+cfg_read() {
+    local varname="$1" key="$2" file="$3"
+    local val
+    val=$(jq -r ".$key // empty" "$file" 2>/dev/null) || true
+    [[ -n "$val" ]] && printf -v "$varname" '%s' "$val"
+}
+
 load_config() {
     local file="$1"
-    BROWSER=$(jq -r '.browser // "chromium"' "$file" 2>/dev/null) || true
-    EXTRA_BROWSER_FLAGS=$(jq -r '.extraBrowserFlags // empty' "$file" 2>/dev/null) || true
-    local port; port=$(jq -r '.serverPort // empty' "$file" 2>/dev/null) || true
-    [[ -n "$port" ]] && SERVER_PORT="$port" || true
-    GOOGLE_GEO_API_KEY=$(jq -r '.googleGeoApiKey // empty' "$file" 2>/dev/null) || true
-    # Window / kiosk settings
-    local val
-    val=$(jq -r '.kioskMode // empty' "$file" 2>/dev/null) || true
-    [[ -n "$val" ]] && KIOSK_MODE="$val" || true
-    val=$(jq -r '.fullscreen // empty' "$file" 2>/dev/null) || true
-    [[ -n "$val" ]] && FULLSCREEN="$val" || true
-    val=$(jq -r '.hideMouseCursor // empty' "$file" 2>/dev/null) || true
-    [[ -n "$val" ]] && HIDE_MOUSE_CURSOR="$val" || true
-    val=$(jq -r '.preventSleep // empty' "$file" 2>/dev/null) || true
-    [[ -n "$val" ]] && PREVENT_SLEEP="$val" || true
-    val=$(jq -r '.width // empty' "$file" 2>/dev/null) || true
-    [[ -n "$val" ]] && WINDOW_WIDTH="$val" || true
-    val=$(jq -r '.height // empty' "$file" 2>/dev/null) || true
-    [[ -n "$val" ]] && WINDOW_HEIGHT="$val" || true
-    val=$(jq -r '.logLevel // empty' "$file" 2>/dev/null) || true
-    [[ -n "$val" ]] && LOG_LEVEL="$val" || true
-    val=$(jq -r '.relaxSslCerts // empty' "$file" 2>/dev/null) || true
-    [[ -n "$val" ]] && RELAX_SSL_CERTS="$val" || true
+    cfg_read BROWSER            browser            "$file"
+    cfg_read EXTRA_BROWSER_FLAGS extraBrowserFlags  "$file"
+    cfg_read SERVER_PORT        serverPort         "$file"
+    cfg_read GOOGLE_GEO_API_KEY googleGeoApiKey    "$file"
+    cfg_read KIOSK_MODE         kioskMode          "$file"
+    cfg_read FULLSCREEN         fullscreen         "$file"
+    cfg_read HIDE_MOUSE_CURSOR  hideMouseCursor    "$file"
+    cfg_read PREVENT_SLEEP      preventSleep       "$file"
+    cfg_read WINDOW_WIDTH       width              "$file"
+    cfg_read WINDOW_HEIGHT      height             "$file"
+    cfg_read LOG_LEVEL          logLevel           "$file"
+    cfg_read RELAX_SSL_CERTS    relaxSslCerts      "$file"
 }
 
 if [[ -f "$CONFIG_FILE" ]]; then
@@ -314,10 +311,7 @@ build_chromium_args() {
     fi
 
     # XDG-compliant profile directory (instance-aware)
-    local data_suffix="chromium"
-    [[ -n "$INSTANCE" ]] && data_suffix="chromium-${INSTANCE}"
-    local data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/xiboplayer/${data_suffix}"
-    BROWSER_ARGS+=(--user-data-dir="$data_dir")
+    BROWSER_ARGS+=(--user-data-dir="$DATA_DIR")
 
     # Accept invalid SSL certificates for media/stream URLs (default: true)
     # Self-signed certs on media streams are common in signage deployments.
@@ -391,11 +385,8 @@ main() {
     echo "[xiboplayer]   Binary:  $browser_bin" >&2
 
     # Create profile directory and kiosk policies
-    local data_suffix="chromium"
-    [[ -n "$INSTANCE" ]] && data_suffix="chromium-${INSTANCE}"
-    local data_dir="${XDG_DATA_HOME:-$HOME/.local/share}/xiboplayer/${data_suffix}"
-    mkdir -p "$data_dir/policies/managed" 2>/dev/null || true
-    cat > "$data_dir/policies/managed/kiosk.json" << POLICY
+    mkdir -p "$DATA_DIR/policies/managed" 2>/dev/null || true
+    cat > "$DATA_DIR/policies/managed/kiosk.json" << POLICY
 {
   "TranslateEnabled": false,
   "AutoFillEnabled": false,

@@ -84,11 +84,14 @@ populate_chromium_source() {
     mkdir -p "$orig_dir/server"
     cp "$SCRIPT_DIR/xiboplayer/launch-kiosk.sh" "$orig_dir/"
     cp "$SCRIPT_DIR/xiboplayer/config.json" "$orig_dir/"
+    cp "$SCRIPT_DIR/xiboplayer/config.json.example" "$orig_dir/"
     cp "$SCRIPT_DIR/xiboplayer/xiboplayer-chromium.service" "$orig_dir/"
     cp "$SCRIPT_DIR/xiboplayer/xiboplayer-chromium.desktop" "$orig_dir/"
     cp "$SCRIPT_DIR/xiboplayer/xiboplayer.png" "$orig_dir/"
     cp "$SCRIPT_DIR/xiboplayer/server/server.js" "$orig_dir/server/"
     cp "$SCRIPT_DIR/xiboplayer/server/package.json" "$orig_dir/server/"
+    cp "$SCRIPT_DIR/CONFIG.md" "$orig_dir/"
+    cp "$SCRIPT_DIR/README.md" "$orig_dir/"
 }
 
 pkg_build_source_deb populate_chromium_source
