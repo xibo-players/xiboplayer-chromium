@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.6.0
+Version:        0.6.1
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -118,6 +118,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Tue Mar 03 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.1-1
+- feat: switch default clientType from chromeOS to linux, fix: keyboard shortcuts on Wayland and quit for Chromium kiosk, fix: replace globalShortcut with Menu accelerators for Wayland (Electron), refactor: use shared packaging library for build scripts, fix: remove per-build repo update trigger race conditions
+
 * Mon Mar 02 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.0-1
 - REST v2 transport with auto-detection, chunked download resume, shared config extraction (extractPwaConfig), cert warning overlay fix, download overlay fix
 
