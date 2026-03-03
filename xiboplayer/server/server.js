@@ -31,8 +31,7 @@ const pwaPath = pwaArg
 const configDir = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
 const configPath = path.join(configDir, 'xiboplayer', 'chromium', 'config.json');
 // Keys that control the native shell — NOT forwarded to the PWA.
-// Common shell keys shared with Electron (mirrors @xiboplayer/utils SHELL_ONLY_KEYS).
-// TODO: use extractPwaConfig() from @xiboplayer/utils once published (>0.5.20)
+// Mirrors @xiboplayer/utils SHELL_ONLY_KEYS + Chromium-specific keys.
 const SHELL_ONLY_KEYS = new Set([
   'serverPort', 'kioskMode', 'fullscreen',
   'hideMouseCursor', 'preventSleep', 'width', 'height',
