@@ -30,28 +30,13 @@ const pwaPath = pwaArg
 // Read config.json (if present) for CMS config and serverPort
 const configDir = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
 const configPath = path.join(configDir, 'xiboplayer', 'chromium', 'config.json');
-// Keys that control the native shell — NOT forwarded to the PWA.
-// Mirrors @xiboplayer/utils SHELL_ONLY_KEYS + Chromium-specific keys.
-const SHELL_ONLY_KEYS = new Set([
-  'serverPort', 'kioskMode', 'fullscreen',
-  'hideMouseCursor', 'preventSleep', 'width', 'height',
-  // Chromium-specific:
-  'browser', 'extraBrowserFlags', 'relaxSslCerts',
-]);
-
-let pwaConfig;
+let rawConfig;
 try {
-  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  if (config.serverPort) defaultPort = config.serverPort;
-  if (config.cmsUrl) {
-    console.log(`[Server] CMS config loaded from ${configPath}: ${config.cmsUrl}`);
+  rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  if (rawConfig.serverPort) defaultPort = rawConfig.serverPort;
+  if (rawConfig.cmsUrl) {
+    console.log(`[Server] CMS config loaded from ${configPath}: ${rawConfig.cmsUrl}`);
   }
-  // Extract PWA config — deny-list approach: everything not shell-only flows through.
-  pwaConfig = {};
-  for (const [key, value] of Object.entries(config)) {
-    if (!SHELL_ONLY_KEYS.has(key)) pwaConfig[key] = value;
-  }
-  if (!Object.keys(pwaConfig).length) pwaConfig = undefined;
 } catch (err) {
   if (err.code !== 'ENOENT') {
     console.warn(`[Server] Failed to read config: ${err.message}`);
@@ -68,7 +53,13 @@ console.log(`[Server] PWA path: ${pwaPath}`);
 console.log(`[Server] Port: ${serverPort}`);
 console.log(`[Server] Data dir: ${dataDir}`);
 
-import('@xiboplayer/proxy').then(({ startServer }) => {
+// Import SDK modules (ESM) and start server
+Promise.all([
+  import('@xiboplayer/proxy'),
+  import('@xiboplayer/utils/config'),
+]).then(([{ startServer }, { extractPwaConfig }]) => {
+  // Extract PWA config using SDK's deny-list filter (Chromium-specific extras excluded)
+  const pwaConfig = rawConfig ? extractPwaConfig(rawConfig, ['browser', 'extraBrowserFlags']) : undefined;
   return startServer({ port: serverPort, pwaPath, appVersion: APP_VERSION, pwaConfig, configFilePath: configPath, dataDir });
 }).catch((err) => {
   console.error('[Server] Failed to start:', err.message);
