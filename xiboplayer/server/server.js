@@ -68,6 +68,18 @@ console.log(`[Server] PWA path: ${pwaPath}`);
 console.log(`[Server] Port: ${serverPort}`);
 console.log(`[Server] Data dir: ${dataDir}`);
 
+// Inject CMS ID for per-CMS cache namespacing
+if (pwaConfig && pwaConfig.cmsUrl) {
+  try {
+    // computeCmsId is sync — safe to call before async import
+    const { computeCmsId } = require('@xiboplayer/utils/config');
+    const cmsId = computeCmsId(pwaConfig.cmsUrl);
+    if (cmsId) pwaConfig.cmsId = cmsId;
+  } catch (_) {
+    // Will be computed by proxy from pwaConfig.cmsUrl as fallback
+  }
+}
+
 import('@xiboplayer/proxy').then(({ startServer }) => {
   return startServer({ port: serverPort, pwaPath, appVersion: APP_VERSION, pwaConfig, configFilePath: configPath, dataDir });
 }).catch((err) => {
