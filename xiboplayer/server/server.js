@@ -57,9 +57,15 @@ console.log(`[Server] Data dir: ${dataDir}`);
 Promise.all([
   import('@xiboplayer/proxy'),
   import('@xiboplayer/utils/config'),
-]).then(([{ startServer }, { extractPwaConfig }]) => {
+]).then(([{ startServer }, { extractPwaConfig, computeCmsId }]) => {
   // Extract PWA config using SDK's deny-list filter (Chromium-specific extras excluded)
   const pwaConfig = rawConfig ? extractPwaConfig(rawConfig, ['browser', 'extraBrowserFlags']) : undefined;
+
+  // Inject CMS ID for per-CMS cache namespacing
+  if (pwaConfig && pwaConfig.cmsUrl) {
+    const cmsId = computeCmsId(pwaConfig.cmsUrl);
+    if (cmsId) pwaConfig.cmsId = cmsId;
+  }
   return startServer({ port: serverPort, pwaPath, appVersion: APP_VERSION, pwaConfig, configFilePath: configPath, dataDir });
 }).catch((err) => {
   console.error('[Server] Failed to start:', err.message);
