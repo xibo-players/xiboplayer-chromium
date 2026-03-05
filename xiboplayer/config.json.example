@@ -7,6 +7,8 @@
   "browser": "chromium",
   "extraBrowserFlags": "",
 
+  "allowShellCommands": false,
+
   "kioskMode": true,
   "fullscreen": true,
   "hideMouseCursor": true,
