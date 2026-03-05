@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.6.2
+Version:        0.6.3
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -118,6 +118,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Thu Mar 05 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.3-1
+- Canvas regions, protocol auto-detect, persistent durations, XIC handlers, download resume, vitest 4 upgrade
+
 * Wed Mar 04 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.2-1
 - fix: expire current layout when schedule changes, fix: multi-widget playlist cycling, fix: layout background fallback for storedAs filenames, refactor: single source of truth for layout duration calculation
 

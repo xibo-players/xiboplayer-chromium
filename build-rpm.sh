@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${PKG_LIB_RPM:-${SCRIPT_DIR}/scripts/packaging/lib-rpm.sh}"
 
 PKG_NAME="xiboplayer-chromium"
-VERSION="${1:-0.6.2}"
+VERSION="${1:-0.6.3}"
 RELEASE="${2:-1}"
 
 echo "==> Building ${PKG_NAME}-${VERSION}-${RELEASE} RPM (self-contained)"
