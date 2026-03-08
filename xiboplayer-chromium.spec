@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.6.6
+Version:        0.6.7
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -118,6 +118,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Sun Mar 08 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.7-1
+- fix: store layout durations as write-once facts, prevent startup double-pop
+
 * Sat Mar 07 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.6-1
 - Tiered screenshot capture (getDisplayMedia + html2canvas fallback), fix layout storm on fresh start via preparingLayoutId guard, fix timeline duration key mismatch, handle unconfigured CMS download window, HLS stream proxy, auto-approve screen capture in Chromium
 
