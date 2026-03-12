@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.6.8
+Version:        0.6.11
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -118,6 +118,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Thu Mar 12 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.11-1
+- Native XMR client replacing upstream framework, DataConnector refreshAll fix, timeline overlay duration fix, AGPL-3.0 license, clientCode 400 registration
+
 * Sun Mar 08 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.8-1
 - Fix double layoutEnd emit, HTTP 304 retry bug, XLF media cache check, double-pop race, proxy stale-cache fallback, add proxy response timing and log timestamps
 
