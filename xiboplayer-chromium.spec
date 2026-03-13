@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.6.11
+Version:        0.6.12
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -118,6 +118,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Fri Mar 13 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.12-1
+- XMDS file download caching, idempotent cache-through architecture, X-Cms-Download-Url header for XMDS-only CMSes, fix layout XLF 500 errors on XMDS transport
+
 * Thu Mar 13 2026 Pau Aliagas <linuxnow@gmail.com> - 0.6.12-1
 - XMDS file download caching: signed URLs route through cache-through proxy, eliminating CORS failures. Idempotent cache-through architecture: REST and XMDS converge on same proxy mirror paths, transport-agnostic ContentStore. X-Cms-Download-Url header for XMDS-only CMSes. Fix layout XLF 500 errors on XMDS transport.
 
