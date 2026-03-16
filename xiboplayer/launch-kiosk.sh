@@ -249,6 +249,7 @@ start_server() {
 
     local server_args=(--port="$SERVER_PORT")
     [[ -n "${PWA_PATH:-}" ]] && server_args+=(--pwa-path="$PWA_PATH")
+    [[ -n "${INSTANCE:-}" ]] && server_args+=(--instance="$INSTANCE")
 
     echo "[xiboplayer] Starting local server on port $SERVER_PORT..." >&2
     node "$SERVER_DIR/server.js" "${server_args[@]}" &

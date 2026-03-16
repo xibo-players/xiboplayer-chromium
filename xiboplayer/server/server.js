@@ -23,6 +23,9 @@ const APP_VERSION = '0.2.0';
 const args = process.argv.slice(2);
 const portArg = args.find(a => a.startsWith('--port='));
 const pwaArg = args.find(a => a.startsWith('--pwa-path='));
+const instanceArg = args.find(a => a.startsWith('--instance='));
+const instanceName = instanceArg ? instanceArg.split('=')[1] : '';
+const instanceDir = instanceName || 'chromium';
 // Port priority: CLI --port > config.json serverPort > default 8766
 let defaultPort = 8766;
 const pwaPath = pwaArg
@@ -31,7 +34,7 @@ const pwaPath = pwaArg
 
 // Read config.json (if present) for CMS config and serverPort
 const configDir = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
-const configPath = path.join(configDir, 'xiboplayer', 'chromium', 'config.json');
+const configPath = path.join(configDir, 'xiboplayer', instanceDir, 'config.json');
 let rawConfig;
 try {
   rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -47,9 +50,9 @@ try {
 
 const serverPort = portArg ? parseInt(portArg.split('=')[1], 10) : defaultPort;
 
-// XDG-compliant data directory for DiskCache media storage
+// XDG-compliant data directory for DiskCache media storage (instance-aware)
 const dataHome = process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share');
-const dataDir = path.join(dataHome, 'xiboplayer', 'chromium');
+const dataDir = path.join(dataHome, 'xiboplayer', instanceDir);
 
 console.log(`[Server] PWA path: ${pwaPath}`);
 console.log(`[Server] Port: ${serverPort}`);
