@@ -7,6 +7,8 @@ Self-contained Xibo digital signage player for kiosk deployments on Fedora, RHEL
 - **Bundles the PWA player** — no external PWA server needed
 - Runs a local Node.js server that serves the player and proxies CMS API requests
 - Launches Chromium in kiosk mode pointing at `http://localhost:8766`
+- **Multi-display sync (v0.7.0)** — video wall support with <8ms precision, 12 choreography effects
+- **Multi-instance support** — run multiple displays on the same machine (`--instance=NAME`)
 - Auto-restarts the browser if it crashes
 - Disables screen blanking and DPMS (X11 and Wayland)
 - Starts automatically on user login via a systemd user service
