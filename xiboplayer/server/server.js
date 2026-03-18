@@ -74,7 +74,10 @@ Promise.all([
   const allowShellCommands = !!(rawConfig && rawConfig.allowShellCommands);
   const listenAddress = rawConfig?.listenAddress || (rawConfig?.sync?.isLead ? '0.0.0.0' : 'localhost');
   const syncSecret = rawConfig?.sync?.cmsKey || rawConfig?.cmsKey;
-  return startServer({ port: serverPort, listenAddress, pwaPath, appVersion: APP_VERSION, pwaConfig, configFilePath: configPath, dataDir, allowShellCommands, syncSecret });
+  const syncGroupId = rawConfig?.sync?.syncGroupId;
+  const isLead = rawConfig?.sync?.isLead;
+  const displayId = rawConfig?.hardwareKey;
+  return startServer({ port: serverPort, listenAddress, pwaPath, appVersion: APP_VERSION, pwaConfig, configFilePath: configPath, dataDir, allowShellCommands, syncSecret, syncGroupId, isLead, displayId });
 }).catch((err) => {
   console.error('[Server] Failed to start:', err.message);
   process.exit(1);
