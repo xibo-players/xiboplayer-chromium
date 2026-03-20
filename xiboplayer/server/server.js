@@ -65,7 +65,10 @@ console.log(`[Server] Data dir: ${dataDir}`);
 Promise.all([
   import('@xiboplayer/proxy'),
   import('@xiboplayer/utils/config'),
-]).then(([{ startServer }, { extractPwaConfig, computeCmsId }]) => {
+]).then(([{ startServer, migrateContentCache }, { extractPwaConfig, computeCmsId }]) => {
+  // One-time migration: hardlink old per-instance cache to shared cache (remove after v0.7.3)
+  migrateContentCache(dataHome);
+
   // Extract PWA config using SDK's deny-list filter (Chromium-specific extras excluded)
   const pwaConfig = rawConfig ? extractPwaConfig(rawConfig, ['browser', 'extraBrowserFlags', 'allowShellCommands']) : undefined;
 
