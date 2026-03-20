@@ -48,7 +48,7 @@ jobs:
       fedora-matrix: '["43", "44"]'
       arch-matrix: '["x86_64"]'
       gpg-sign: true
-      publish-to-repo: false
+      publish-to-repo: true
       create-github-release: false
     secrets: inherit
 
@@ -61,7 +61,7 @@ jobs:
       deb-script: 'build-deb.sh'
       arch-matrix: '["amd64", "arm64"]'
       gpg-sign: true
-      publish-to-repo: false
+      publish-to-repo: true
       create-github-release: false
       extra-build-deps: 'nodejs npm'
     secrets: inherit
@@ -103,4 +103,21 @@ jobs:
             dist/DEB-GPG-KEY-*
           draft: false
           prerelease: false
+
+  notify:
+    name: Trigger repository update
+    needs: release
+    if: needs.release.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger update-repos on central pages repo
+        env:
+          GH_TOKEN: ${{ secrets.PAGES_TOKEN }}
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/xibo-players/xibo-players.github.io/dispatches" \
+            -d '{"event_type": "update-repos", "client_payload": {"package": "xiboplayer-chromium", "repo": "${{ github.repository }}", "tag": "${{ github.ref_name }}"}}'
+          echo "Triggered update-repos for xiboplayer-chromium"
 
