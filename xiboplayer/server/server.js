@@ -55,7 +55,7 @@ const serverPort = portArg ? parseInt(portArg.split('=')[1], 10) : defaultPort;
 // stored once, not per-instance. Safe: ContentStore uses atomic writes.
 // Per-CMS isolation is handled by the {cmsId} subdirectory inside dataDir.
 const dataHome = process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share');
-const dataDir = path.join(dataHome, 'xiboplayer', 'cache');
+const dataDir = path.join(dataHome, 'xiboplayer', 'shared');
 
 console.log(`[Server] PWA path: ${pwaPath}`);
 console.log(`[Server] Port: ${serverPort}`);
