@@ -8,3 +8,4 @@ deb-pkg/
 
 # Node.js dependencies (installed during build)
 node_modules/
+configs/secrets.env
