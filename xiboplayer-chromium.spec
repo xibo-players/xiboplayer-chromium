@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.7.2
+Version:        0.7.3
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -118,6 +118,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Sat Mar 21 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.3-1
+- Safe chunked download chain: write locks, timeout scaling, auth persistence (#285)
+
 * Fri Mar 20 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.2-1
 - Shared content cache across instances, startup layout storm fix, Playwright e2e tests, POST /config controls fix, cache migration via hardlinks
 
