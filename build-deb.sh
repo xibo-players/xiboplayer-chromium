@@ -11,7 +11,7 @@ source "${PKG_LIB_DEB:-${SCRIPT_DIR}/scripts/packaging/lib-deb.sh}"
 # ── Configuration ─────────────────────────────────────────────────────
 PKG_NAME="xiboplayer-chromium"
 PKG_ARCH="all"
-PKG_DEPENDS="chromium | google-chrome-stable, nodejs (>= 18), jq, curl, systemd"
+PKG_DEPENDS="chromium | chromium-browser | google-chrome-stable, nodejs (>= 18), jq, curl, systemd"
 PKG_RECOMMENDS="x11-xserver-utils, xdotool"
 PKG_DESCRIPTION="Self-contained Xibo digital signage player (Chromium kiosk)"
 PKG_DESCRIPTION_LONG=" Bundles the PWA player locally and serves it via a Node.js server,
