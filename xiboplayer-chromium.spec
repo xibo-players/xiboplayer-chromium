@@ -2,7 +2,7 @@
 
 Name:           xiboplayer-chromium
 Version:        0.7.4
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
 License:        AGPL-3.0-or-later
