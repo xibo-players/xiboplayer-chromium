@@ -59,6 +59,7 @@ jobs:
     with:
       package-name: xiboplayer-chromium
       deb-script: 'build-deb.sh'
+      distro-matrix: '["ubuntu:24.04", "debian:trixie"]'
       arch-matrix: '["amd64", "arm64"]'
       gpg-sign: true
       publish-to-repo: true
