@@ -294,7 +294,8 @@ build_chromium_args() {
         --overscroll-history-navigation=0
         --autoplay-policy=no-user-gesture-required
         --check-for-update-interval=31536000
-        --disable-features=TranslateUI,Translate
+        --disable-features=TranslateUI,Translate,SpareRendererForSitePerProcess
+        --disable-extensions
         --disable-ipc-flooding-protection
         --password-store=basic
         --lang=en-US
