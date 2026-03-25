@@ -1,8 +1,8 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.7.5
-Release:        2%{?dist}
+Version:        0.7.6
+Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
 License:        AGPL-3.0-or-later
@@ -118,6 +118,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Wed Mar 25 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.6-1
+- Timer deferral fix, offline playback, download/cache race fixes, Electron 41 with --no-zygote GPU fix, Chromium kiosk optimization
+
 * Mon Mar 24 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.5-2
 - Optimize kiosk: disable extensions and spare renderer process
 - Removes GNOME browser connector, prevents idle renderer accumulation
