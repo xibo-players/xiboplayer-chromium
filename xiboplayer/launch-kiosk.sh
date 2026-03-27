@@ -66,6 +66,7 @@ load_config() {
     cfg_read WINDOW_HEIGHT      height             "$file"
     cfg_read LOG_LEVEL          logLevel           "$file"
     cfg_read RELAX_SSL_CERTS    relaxSslCerts      "$file"
+    cfg_read GPU_PREFERENCE     gpu                "$file"
 }
 
 if [[ -f "$CONFIG_FILE" ]]; then
@@ -89,6 +90,7 @@ for arg in "$@"; do
         --pwa-path=*) PWA_PATH="${arg#*=}" ;;
         --no-kiosk) KIOSK_MODE="false" ;;
         --log-level=*) LOG_LEVEL="${arg#*=}" ;;
+        --gpu=*) GPU_PREFERENCE="${arg#*=}" ;;
     esac
 done
 
@@ -278,6 +280,123 @@ start_server() {
 }
 
 # ---------------------------------------------------------------------------
+# GPU Detection & Selection
+# Scans /sys/class/drm for GPUs, ranks discrete > integrated.
+# Override: --gpu=nvidia|intel|amd|auto|/dev/dri/renderDNNN, config.gpu, XIBO_GPU
+# ---------------------------------------------------------------------------
+detect_and_select_gpu() {
+    local pref="${GPU_PREFERENCE:-${XIBO_GPU:-auto}}"
+    local -a gpu_names=() gpu_vendors=() gpu_render_nodes=() gpu_ranks=() gpu_va_drivers=() gpu_has_display=()
+    local best_idx=-1 best_rank=-1
+
+    for card_dir in /sys/class/drm/card[0-9]*; do
+        [[ -d "$card_dir/device" ]] || continue
+        local card_name vendor device driver render_node card_realpath has_display
+        card_name=$(basename "$card_dir")
+        vendor=$(cat "$card_dir/device/vendor" 2>/dev/null) || continue
+        device=$(cat "$card_dir/device/device" 2>/dev/null) || continue
+        driver=$(basename "$(readlink "$card_dir/device/driver" 2>/dev/null)" 2>/dev/null) || driver="unknown"
+        card_realpath=$(readlink -f "$card_dir/device")
+
+        # Find the render node for this card
+        render_node=""
+        for rn_dir in /sys/class/drm/renderD*; do
+            local rn_realpath
+            rn_realpath=$(readlink -f "$rn_dir/device" 2>/dev/null) || continue
+            if [[ "$rn_realpath" == "$card_realpath" ]]; then
+                render_node="/dev/dri/$(basename "$rn_dir")"
+                break
+            fi
+        done
+        [[ -z "$render_node" ]] && continue
+
+        # Check if this card has display connectors (DP, HDMI, eDP, VGA, etc.)
+        has_display="false"
+        for conn in /sys/class/drm/${card_name}-*; do
+            if [[ "$(basename "$conn")" =~ -(DP|HDMI|eDP|VGA|DVI|DSI|LVDS) ]]; then
+                has_display="true"
+                break
+            fi
+        done
+
+        local name rank va_driver
+        case "$vendor" in
+            0x10de) name="nvidia"; rank=3; va_driver="nvidia" ;;
+            0x1002) name="amd";    rank=2; va_driver="radeonsi" ;;
+            0x8086) name="intel";  rank=1; va_driver="iHD" ;;
+            *)      name="unknown"; rank=0; va_driver="" ;;
+        esac
+
+        local idx=${#gpu_names[@]}
+        gpu_names+=("$name")
+        gpu_vendors+=("$vendor")
+        gpu_render_nodes+=("$render_node")
+        gpu_ranks+=("$rank")
+        gpu_va_drivers+=("$va_driver")
+        gpu_has_display+=("$has_display")
+        local display_tag="render-only"
+        [[ "$has_display" == "true" ]] && display_tag="display"
+        echo "[xiboplayer]   GPU:     ${name} ${device} (${driver}) → ${render_node} (${display_tag})" >&2
+    done
+
+    if (( ${#gpu_names[@]} == 0 )); then
+        echo "[xiboplayer]   GPU:     none detected, using Chromium defaults" >&2
+        return
+    fi
+
+    # Select GPU
+    local selected_idx=-1
+    if [[ "$pref" == "auto" ]]; then
+        # On hybrid GPU (Optimus/PRIME), discrete can't share buffers with
+        # display GPU on Wayland. Prefer the GPU with display connectors.
+        local has_display_gpu="false" has_renderonly_gpu="false"
+        for i in "${!gpu_has_display[@]}"; do
+            [[ "${gpu_has_display[i]}" == "true" ]] && has_display_gpu="true"
+            [[ "${gpu_has_display[i]}" == "false" ]] && has_renderonly_gpu="true"
+        done
+        if [[ "$has_display_gpu" == "true" && "$has_renderonly_gpu" == "true" ]]; then
+            # Hybrid system: pick highest-ranked display GPU
+            for i in "${!gpu_ranks[@]}"; do
+                if [[ "${gpu_has_display[i]}" == "true" ]] && (( gpu_ranks[i] > best_rank )); then
+                    best_rank=${gpu_ranks[i]}
+                    selected_idx=$i
+                fi
+            done
+        else
+            # Single GPU or all have displays: pick highest rank
+            for i in "${!gpu_ranks[@]}"; do
+                if (( gpu_ranks[i] > best_rank )); then
+                    best_rank=${gpu_ranks[i]}
+                    selected_idx=$i
+                fi
+            done
+        fi
+    elif [[ "$pref" == /dev/dri/* ]]; then
+        for i in "${!gpu_render_nodes[@]}"; do
+            [[ "${gpu_render_nodes[i]}" == "$pref" ]] && selected_idx=$i && break
+        done
+    else
+        for i in "${!gpu_names[@]}"; do
+            [[ "${gpu_names[i]}" == "${pref,,}" ]] && selected_idx=$i && break
+        done
+    fi
+
+    if (( selected_idx < 0 )); then
+        echo "[xiboplayer]   GPU:     requested '${pref}' not found, using Chromium defaults" >&2
+        return
+    fi
+
+    SELECTED_GPU_RENDER_NODE="${gpu_render_nodes[selected_idx]}"
+    SELECTED_GPU_VA_DRIVER="${gpu_va_drivers[selected_idx]}"
+    echo "[xiboplayer]   GPU:     selected ${gpu_names[selected_idx]} → ${SELECTED_GPU_RENDER_NODE} (pref: ${pref})" >&2
+
+    if [[ -n "$SELECTED_GPU_VA_DRIVER" ]]; then
+        export LIBVA_DRIVER_NAME="$SELECTED_GPU_VA_DRIVER"
+        echo "[xiboplayer]   GPU:     VA-API driver: ${SELECTED_GPU_VA_DRIVER}" >&2
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # Build Chromium arguments
 # ---------------------------------------------------------------------------
 build_chromium_args() {
@@ -361,6 +480,11 @@ build_chromium_args() {
         --gpu-rasterization-msaa-sample-count=0
     )
     echo "[xiboplayer]   Memory:  ${total_ram_gb}GB RAM, ${cpu_count} CPUs → V8 heap ${max_old_space_mb}MB, ${raster_threads} raster threads" >&2
+
+    # GPU render node override (set by detect_and_select_gpu)
+    if [[ -n "${SELECTED_GPU_RENDER_NODE:-}" ]]; then
+        BROWSER_ARGS+=(--render-node-override="$SELECTED_GPU_RENDER_NODE")
+    fi
 
     # Append any user-defined extra flags
     if [[ -n "$EXTRA_BROWSER_FLAGS" ]]; then
@@ -463,6 +587,9 @@ POLICY
         export GOOGLE_GEO_API_KEY
         echo "[xiboplayer]   Geo API: configured" >&2
     fi
+
+    # Detect and select GPU
+    detect_and_select_gpu
 
     # Build arguments and launch
     build_chromium_args
