@@ -178,3 +178,85 @@ config.json
 ```
 
 Changes to `config.json` require a player restart to take effect.
+
+## Config Templates
+
+Reusable config templates with variable substitution and management scripts. Shipped in the RPM/DEB at `/usr/share/xiboplayer-chromium/configs/` and also in the source repo under `configs/`.
+
+### Quick Start (RPM/DEB install)
+
+```bash
+# 1. Copy secrets example to your user config dir and fill in CMS credentials
+mkdir -p ~/.config/xiboplayer
+cp /usr/share/xiboplayer-chromium/configs/secrets.env.example ~/.config/xiboplayer/secrets.env
+vi ~/.config/xiboplayer/secrets.env
+
+# 2. Apply a template to create a player instance
+/usr/share/xiboplayer-chromium/configs/apply.sh chromium-dev chromium            # dev mode with debug
+/usr/share/xiboplayer-chromium/configs/apply.sh chromium-kiosk chromium           # production kiosk
+/usr/share/xiboplayer-chromium/configs/apply.sh chromium-sync-lead chromium-sync-lead    PORT=8766
+/usr/share/xiboplayer-chromium/configs/apply.sh chromium-sync-follower chromium-sync-follower-1 PORT=8767 TOPOLOGY_X=1
+
+# 3. Start the player
+systemctl --user start xiboplayer-chromium
+
+# 4. Clean up an instance
+/usr/share/xiboplayer-chromium/configs/clean.sh chromium content   # clear downloaded media only
+/usr/share/xiboplayer-chromium/configs/clean.sh chromium browser   # clear browser caches + media
+/usr/share/xiboplayer-chromium/configs/clean.sh chromium full      # fresh start, keep auth
+/usr/share/xiboplayer-chromium/configs/clean.sh chromium nuke      # total wipe, new display identity
+```
+
+### Quick Start (source checkout)
+
+```bash
+cd configs/
+cp secrets.env.example secrets.env
+vi secrets.env
+./apply.sh chromium-dev chromium
+./clean.sh chromium content
+```
+
+### Templates
+
+| Template | Purpose |
+|----------|---------|
+| `chromium-dev.json` | Development: no kiosk, debug logging, all overlays and controls enabled |
+| `chromium-kiosk.json` | Production: kiosk mode, no debug, no controls |
+| `chromium-sync-lead.json` | Sync wall leader: 960x540, debug, sync config |
+| `chromium-sync-follower.json` | Sync wall follower: configurable port, position, topology |
+
+### Variable Syntax
+
+Templates use `{{VAR}}` and `{{VAR:default}}` placeholders:
+
+```jsonc
+{
+  "cmsUrl": "{{CMS_URL}}",              // required — error if not in secrets.env or CLI
+  "displayName": "{{DISPLAY_NAME:dev}}", // optional — uses "dev" if not provided
+  "serverPort": {{PORT:8766}}            // numeric defaults work too
+}
+```
+
+Variables are resolved in order: CLI args > `secrets.env` > default value.
+
+### Secrets
+
+`~/.config/xiboplayer/secrets.env` holds CMS credentials (per-user, never in system dirs).
+The `apply.sh` script looks for secrets here first, falling back to the script's directory:
+
+```bash
+CMS_URL=https://your-cms.example.com
+CMS_KEY=your-server-key
+API_CLIENT_ID=your-oauth-client-id       # optional: enables auto-authorization
+API_CLIENT_SECRET=your-oauth-client-secret
+```
+
+### Clean Levels
+
+| Level | Removes | Keeps |
+|-------|---------|-------|
+| `content` | Shared media cache | Browser state, auth, config |
+| `browser` | Browser caches + content | Auth (localStorage, IndexedDB), config |
+| `full` | Everything except auth | Display identity (hardwareKey, XMR keys) |
+| `nuke` | Everything | Nothing — new display, needs re-authorization |
