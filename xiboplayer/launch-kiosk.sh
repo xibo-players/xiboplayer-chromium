@@ -420,8 +420,18 @@ build_chromium_args() {
         --lang=en-US
         "--auto-select-desktop-capture-source=Entire screen"
         --auto-accept-this-tab-capture
+        # GPU acceleration — offload raster/composite from renderer to GPU process.
+        # Without these, Chromium renders/rasters in the renderer process (CPU-heavy).
+        # With these, work moves to the GPU process (hardware-accelerated).
+        --ignore-gpu-blocklist
+        --enable-gpu-rasterization
+        --enable-zero-copy
+        --enable-features=CanvasOopRasterization
+        # Single-origin signage: limit to 1 renderer (default spawns per-frame)
+        --renderer-process-limit=1
         # Prevent GPU crash and renderer freeze when screen is locked/off
         --disable-gpu-watchdog
+        --disable-gpu-process-crash-limit
         --disable-background-timer-throttling
         --disable-renderer-backgrounding
         # Strip unnecessary Chrome services to reduce memory/CPU (~50-80 MB savings)
