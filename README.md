@@ -42,7 +42,7 @@ Self-contained Xibo digital signage player for kiosk deployments on Fedora, RHEL
 **Fedora/RHEL:**
 ```bash
 sudo dnf install \
-  https://github.com/xibo-players/xibo-players.github.io/releases/download/v43-5/xiboplayer-release-43-5.noarch.rpm
+  https://dl.xiboplayer.org/rpm/fedora/43/noarch/xiboplayer-release-43-7.fc43.noarch.rpm
 sudo dnf install xiboplayer-chromium
 ```
 
