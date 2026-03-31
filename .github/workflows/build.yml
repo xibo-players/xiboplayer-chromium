@@ -72,7 +72,5 @@ jobs:
     uses: xibo-players/.github/.github/workflows/create-release.yml@main
     with:
       package-name: xiboplayer-chromium
-      rpm-arch: 'noarch'
-      deb-arch: 'all'
       description: 'Chromium kiosk-mode Xibo digital signage player.'
 
