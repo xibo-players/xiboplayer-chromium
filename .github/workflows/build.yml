@@ -62,7 +62,6 @@ jobs:
       arch-matrix: '["amd64", "arm64"]'
       gpg-sign: true
       publish-to-repo: true
-      create-github-release: false
       extra-build-deps: 'nodejs npm'
     secrets: inherit
 
