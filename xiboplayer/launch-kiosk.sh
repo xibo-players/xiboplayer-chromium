@@ -499,6 +499,20 @@ build_chromium_args() {
         BROWSER_ARGS+=(--render-node-override="$SELECTED_GPU_RENDER_NODE")
     fi
 
+    # Optional remote debugging port for monitoring (FPS, memory, tracing).
+    # NOT enabled by default — set XIBOPLAYER_DEBUG_PORT=9222 to activate.
+    # Security: binds to 127.0.0.1 only (local access).
+    # Usage:
+    #   systemctl --user set-environment XIBOPLAYER_DEBUG_PORT=9222
+    #   systemctl --user restart xiboplayer-chromium
+    #   # ... monitor via CDP at http://localhost:9222 ...
+    #   systemctl --user unset-environment XIBOPLAYER_DEBUG_PORT
+    #   systemctl --user restart xiboplayer-chromium
+    if [[ -n "${XIBOPLAYER_DEBUG_PORT:-}" ]]; then
+        BROWSER_ARGS+=(--remote-debugging-port="$XIBOPLAYER_DEBUG_PORT")
+        echo "[xiboplayer]   Debug:   CDP on port $XIBOPLAYER_DEBUG_PORT (127.0.0.1 only)" >&2
+    fi
+
     # Append any user-defined extra flags
     if [[ -n "$EXTRA_BROWSER_FLAGS" ]]; then
         local -a extra
