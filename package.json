@@ -27,7 +27,7 @@
     "@types/node": "^22.19.15",
     "@types/xml2js": "^0.4.14",
     "typescript": "^5.9.3",
-    "vite": "^5.4.21"
+    "vite": "^8.0.3"
   },
   "author": "Pau Aliagas <linuxnow@gmail.com>",
   "license": "AGPL-3.0-or-later",
