@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.7.12
+Version:        0.7.13
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -131,6 +131,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Thu Apr 02 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.13-1
+- Integration tests, overlay tests, Docker Compose CMS stack, nightly CI
+
 * Thu Apr 02 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.12-1
 - Split Vite builds for SW isolation, major dependency upgrades (vite 8, typescript 6, pdfjs-dist 5), PDF worker fix, e2e port fix
 
