@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.7.12 (2026-04-02)
+
+### Build
+
+- **Upgraded vite 8 and @types/node 25**.
 
 ### Bug Fixes
 
