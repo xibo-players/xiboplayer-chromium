@@ -584,9 +584,13 @@ main() {
     fi
     echo "[xiboplayer]   Binary:  $browser_bin" >&2
 
-    # Create profile directory and kiosk policies
+    # Create kiosk policies — write to both profile and system paths.
+    # Chromium reads policies from /etc/chromium/policies/managed/ (system)
+    # and $DATA_DIR/policies/managed/ (profile). Some versions only check one.
     mkdir -p "$DATA_DIR/policies/managed" 2>/dev/null || true
-    cat > "$DATA_DIR/policies/managed/kiosk.json" << POLICY
+    for policy_dir in "$DATA_DIR/policies/managed" "/etc/chromium/policies/managed"; do
+        mkdir -p "$policy_dir" 2>/dev/null || true
+        cat > "$policy_dir/kiosk.json" 2>/dev/null << POLICY || true
 {
   "TranslateEnabled": false,
   "AutoFillEnabled": false,
@@ -596,6 +600,8 @@ main() {
   "SpellCheckServiceEnabled": false,
   "DownloadRestrictions": 3,
   "DefaultGeolocationSetting": 1,
+  "DefaultNotificationsSetting": 2,
+  "CredentialProviderPromoEnabled": false,
   "VideoCaptureAllowed": true,
   "AudioCaptureAllowed": true,
   "VideoCaptureAllowedUrls": ["http://localhost:${SERVER_PORT}"],
@@ -607,6 +613,7 @@ main() {
   "RestoreOnStartupURLs": []
 }
 POLICY
+    done
 
     # Suppress "Chrome didn't shut down correctly" restore dialog.
     # Flags (--disable-session-crashed-bubble, --noerrdialogs) don't reliably
