@@ -61,7 +61,7 @@ jobs:
       rpm-spec: 'xiboplayer-chromium.spec'
       rpm-script: 'build-rpm.sh'
       fedora-matrix: '["43"]'
-      arch-matrix: '["x86_64"]'
+      arch-matrix: '["x86_64", "aarch64"]'
       gpg-sign: true
       publish-to-repo: true
       default-version: '0.7.13'
