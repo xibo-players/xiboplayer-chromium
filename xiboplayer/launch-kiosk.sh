@@ -144,6 +144,8 @@ cleanup() {
         rm -f "$SERVER_PID_FILE"
     fi
     rm -f "$LOCK_FILE"
+    # Kill unclutter if we started it
+    [[ -n "${UNCLUTTER_PID:-}" ]] && kill "$UNCLUTTER_PID" 2>/dev/null || true
     restore_screen_blanking
     # Kill any child processes in our process group
     kill -- -$$ 2>/dev/null || true
@@ -483,8 +485,10 @@ build_chromium_args() {
         max_old_space_mb=192; raster_threads=2
     elif (( total_ram_gb <= 4 )); then
         max_old_space_mb=256; raster_threads=$(( cpu_count < 2 ? cpu_count : 2 ))
+    elif (( total_ram_gb <= 8 )); then
+        max_old_space_mb=512; raster_threads=$(( cpu_count < 4 ? cpu_count : 4 ))
     else
-        max_old_space_mb=384; raster_threads=$(( cpu_count < 4 ? cpu_count : 4 ))
+        max_old_space_mb=768; raster_threads=$(( cpu_count < 4 ? cpu_count : 4 ))
     fi
 
     BROWSER_ARGS+=(
@@ -559,7 +563,8 @@ main() {
     if [[ "$HIDE_MOUSE_CURSOR" == "true" ]]; then
         if command -v unclutter &>/dev/null; then
             unclutter --timeout 1 --jitter 2 --hide-on-touch &
-            echo "[xiboplayer] Mouse cursor hidden (unclutter)." >&2
+            UNCLUTTER_PID=$!
+            echo "[xiboplayer] Mouse cursor hidden (unclutter, PID $UNCLUTTER_PID)." >&2
         else
             echo "[xiboplayer] WARNING: unclutter not found, cursor will be visible." >&2
             echo "[xiboplayer]   Install: sudo dnf install unclutter" >&2

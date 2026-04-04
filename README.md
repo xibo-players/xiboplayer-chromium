@@ -152,17 +152,17 @@ See [CONFIG.md](CONFIG.md) for full configuration reference.
 xiboplayer
 
 # Edit config
-nano ~/.config/xiboplayer/config.json
+nano ~/.config/xiboplayer/chromium/config.json
 
 # Run manually
 xiboplayer
 
 # Enable auto-start on login
-systemctl --user enable --now xiboplayer-kiosk.service
+systemctl --user enable --now xiboplayer-chromium.service
 
 # Check status / logs
-systemctl --user status xiboplayer-kiosk.service
-journalctl --user -u xiboplayer-kiosk.service -f
+systemctl --user status xiboplayer-chromium.service
+journalctl --user -u xiboplayer-chromium.service -f
 ```
 
 ## Multiple Displays
@@ -203,7 +203,7 @@ EOF
 2. Create a systemd service per instance (or use `--port` to override):
 ```bash
 # Copy and customize the service file
-cp ~/.config/systemd/user/xiboplayer-kiosk.service \
+cp ~/.config/systemd/user/xiboplayer-chromium.service \
    ~/.config/systemd/user/xiboplayer-lobby.service
 # Edit: ExecStart=/usr/bin/xiboplayer --instance=lobby
 systemctl --user enable --now xiboplayer-lobby.service
