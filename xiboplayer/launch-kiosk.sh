@@ -622,6 +622,13 @@ POLICY
     if [[ -f "$prefs_file" ]]; then
         # Use sed to patch exit_type and exited_cleanly in-place
         sed -i 's/"exit_type":"[^"]*"/"exit_type":"Normal"/g; s/"exited_cleanly":false/"exited_cleanly":true/g' "$prefs_file"
+    else
+        # First run — create Preferences with geolocation auto-allowed
+        mkdir -p "$DATA_DIR/Default"
+        cat > "$prefs_file" << 'PREFS'
+{
+  "profile": {"exit_type": "Normal", "exited_cleanly": true, "content_settings": {"exceptions": {"geolocation": {"*,*": {"setting": 1}}}}}}
+PREFS
     fi
 
     # Export Google Geolocation API key for the SDK (if configured)
