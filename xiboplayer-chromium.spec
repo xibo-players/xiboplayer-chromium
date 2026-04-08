@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.7.16
+Version:        0.7.17
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -131,8 +131,8 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
-* Tue Apr 07 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.16-1
-- Fix setup redirect loop, add GPU tile/renderer/msaa flags, rebrand to xiboplayer, switch default to Chromium
+* Wed Apr 08 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.17-1
+- Fix CmsApiClient.uploadMediaUrl to target /library/uploadUrl (xibo-players/xiboplayer#332). BREAKING: signature changes to uploadMediaUrl(url, type, {optionalName}).
 
 * Sat Apr 04 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.15-1
 - Security fixes (XSS, TLS bypass, secret redaction), bug fixes (EventEmitter.once, GPU sort, insertCSS leak, dead deps), shared GPU/memory module, popup suppression, Chromium memory tier sync
