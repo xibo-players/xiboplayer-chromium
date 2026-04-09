@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Install dependencies
         run: sudo apt-get install -y bats jq
       - name: Run tests
@@ -55,7 +55,7 @@ jobs:
   rpm:
     needs: [test, wait-for-pwa]
     if: always() && needs.test.result == 'success' && (needs.wait-for-pwa.result == 'success' || needs.wait-for-pwa.result == 'skipped')
-    uses: xibo-players/.github/.github/workflows/build-rpm.yml@main
+    uses: xibo-players/.github/.github/workflows/build-rpm.yml@5c3b3699cd05c12bb3ec76e5d1d317d539dd69b4  # main
     with:
       package-name: xiboplayer-chromium
       rpm-spec: 'xiboplayer-chromium.spec'
@@ -74,7 +74,7 @@ jobs:
   deb:
     needs: [test, wait-for-pwa]
     if: always() && needs.test.result == 'success' && (needs.wait-for-pwa.result == 'success' || needs.wait-for-pwa.result == 'skipped')
-    uses: xibo-players/.github/.github/workflows/build-deb.yml@main
+    uses: xibo-players/.github/.github/workflows/build-deb.yml@5c3b3699cd05c12bb3ec76e5d1d317d539dd69b4  # main
     with:
       package-name: xiboplayer-chromium
       deb-script: 'build-deb.sh'
@@ -87,7 +87,7 @@ jobs:
 
   release:
     needs: [rpm, deb]
-    uses: xibo-players/.github/.github/workflows/create-release.yml@main
+    uses: xibo-players/.github/.github/workflows/create-release.yml@5c3b3699cd05c12bb3ec76e5d1d317d539dd69b4  # main
     with:
       package-name: xiboplayer-chromium
       description: 'Chromium kiosk-mode Xibo digital signage player.'
