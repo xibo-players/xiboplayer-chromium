@@ -19,15 +19,15 @@
     "@xiboplayer/utils": "0.7.17",
     "@xiboplayer/xmds": "0.7.17",
     "@xiboplayer/xmr": "0.7.17",
-    "html2canvas": "^1.4.1",
-    "nanoevents": "^9.1.0",
-    "xml2js": "^0.6.2"
+    "html2canvas": "latest",
+    "nanoevents": "latest",
+    "xml2js": "latest"
   },
   "devDependencies": {
-    "@types/node": "^25.5.2",
-    "@types/xml2js": "^0.4.14",
-    "typescript": "^5.9.3",
-    "vite": "^8.0.4"
+    "@types/node": "latest",
+    "@types/xml2js": "latest",
+    "typescript": "latest",
+    "vite": "latest"
   },
   "author": "Pau Aliagas <linuxnow@gmail.com>",
   "license": "AGPL-3.0-or-later",
