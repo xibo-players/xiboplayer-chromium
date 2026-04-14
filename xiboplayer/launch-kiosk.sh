@@ -503,6 +503,16 @@ build_chromium_args() {
         BROWSER_ARGS+=(--render-node-override="$SELECTED_GPU_RENDER_NODE")
     fi
 
+    # Forward renderer console (console.log/info/warn/error) to stderr so
+    # the launcher log captures it. Without this chromium only writes
+    # renderer output to its own /tmp/chrome_debug.log — we'd be blind to
+    # XMR / REST / screenshot activity from the PWA.
+    # --v=1 promotes info-level messages; bump to --v=2 for more verbose.
+    BROWSER_ARGS+=(
+        --enable-logging=stderr
+        --v=1
+    )
+
     # Optional remote debugging port for monitoring (FPS, memory, tracing).
     # NOT enabled by default — set XIBOPLAYER_DEBUG_PORT=9222 to activate.
     # Security: binds to 127.0.0.1 only (local access).
