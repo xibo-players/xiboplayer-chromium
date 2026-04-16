@@ -288,7 +288,7 @@ start_server() {
 # ---------------------------------------------------------------------------
 detect_and_select_gpu() {
     local pref="${GPU_PREFERENCE:-${XIBO_GPU:-auto}}"
-    local -a gpu_names=() gpu_vendors=() gpu_render_nodes=() gpu_ranks=() gpu_va_drivers=() gpu_has_display=()
+    local -a gpu_names=() gpu_vendors=() gpu_render_nodes=() gpu_ranks=() gpu_va_drivers=() gpu_has_display=() gpu_is_virtual=()
     local best_idx=-1 best_rank=-1
 
     for card_dir in /sys/class/drm/card[0-9]*; do
@@ -321,12 +321,24 @@ detect_and_select_gpu() {
             fi
         done
 
-        local name rank va_driver
+        local name rank va_driver is_virtual
         case "$vendor" in
-            0x10de) name="nvidia"; rank=3; va_driver="nvidia" ;;
-            0x1002) name="amd";    rank=2; va_driver="radeonsi" ;;
-            0x8086) name="intel";  rank=1; va_driver="iHD" ;;
-            *)      name="unknown"; rank=0; va_driver="" ;;
+            0x10de) name="nvidia";  rank=3;  va_driver="nvidia";   is_virtual=false ;;
+            0x1002) name="amd";     rank=2;  va_driver="radeonsi"; is_virtual=false ;;
+            0x8086) name="intel";   rank=1;  va_driver="iHD";      is_virtual=false ;;
+            # Virtual GPUs — GNOME Boxes / libvirt / QEMU defaults.
+            # Detection finds these (they expose a DRM render node) but
+            # hardware-accelerated Chromium ops fail at runtime with
+            # EACCES on DRM_IOCTL_MODE_CREATE_DUMB when the host doesn't
+            # provide virglrenderer. Rank -1 so a real GPU always wins
+            # when both present (rare — GPU passthrough to a VM uses the
+            # real vendor ID). On a pure-virtual setup we still select
+            # this GPU but skip --render-node-override and force
+            # software rendering so Chromium uses SwiftShader/CPU.
+            0x1af4) name="virtio";  rank=-1; va_driver="";         is_virtual=true  ;;  # Red Hat/Qumranet virtio-gpu
+            0x1234) name="qemu";    rank=-1; va_driver="";         is_virtual=true  ;;  # QEMU Bochs VBE (-vga std)
+            0x15ad) name="vmware";  rank=-1; va_driver="";         is_virtual=true  ;;  # VMware SVGA II
+            *)      name="unknown"; rank=0;  va_driver="";         is_virtual=false ;;
         esac
 
         local idx=${#gpu_names[@]}
@@ -336,9 +348,12 @@ detect_and_select_gpu() {
         gpu_ranks+=("$rank")
         gpu_va_drivers+=("$va_driver")
         gpu_has_display+=("$has_display")
+        gpu_is_virtual+=("$is_virtual")
         local display_tag="render-only"
         [[ "$has_display" == "true" ]] && display_tag="display"
-        echo "[xiboplayer]   GPU:     ${name} ${device} (${driver}) → ${render_node} (${display_tag})" >&2
+        local virtual_tag=""
+        [[ "$is_virtual" == "true" ]] && virtual_tag=", virtual"
+        echo "[xiboplayer]   GPU:     ${name} ${device} (${driver}) → ${render_node} (${display_tag}${virtual_tag})" >&2
     done
 
     if (( ${#gpu_names[@]} == 0 )); then
@@ -388,9 +403,22 @@ detect_and_select_gpu() {
         return
     fi
 
-    SELECTED_GPU_RENDER_NODE="${gpu_render_nodes[selected_idx]}"
     SELECTED_GPU_VA_DRIVER="${gpu_va_drivers[selected_idx]}"
-    echo "[xiboplayer]   GPU:     selected ${gpu_names[selected_idx]} → ${SELECTED_GPU_RENDER_NODE} (pref: ${pref})" >&2
+    SELECTED_GPU_IS_VIRTUAL="${gpu_is_virtual[selected_idx]}"
+
+    # On a virtual GPU the render-node-override propagates a device
+    # that supports DRM but not usable hardware acceleration — Chromium
+    # then crashes with EACCES on MODE_CREATE_DUMB. Skip the override
+    # so Chromium falls back to software rendering (SwiftShader).
+    # Respect XIBOPLAYER_FORCE_GPU=1 for operators who have a working
+    # virgl pipeline and want to opt back in.
+    if [[ "$SELECTED_GPU_IS_VIRTUAL" == "true" && "${XIBOPLAYER_FORCE_GPU:-0}" != "1" ]]; then
+        SELECTED_GPU_RENDER_NODE=""
+        echo "[xiboplayer]   GPU:     selected ${gpu_names[selected_idx]} (virtual) → software rendering" >&2
+    else
+        SELECTED_GPU_RENDER_NODE="${gpu_render_nodes[selected_idx]}"
+        echo "[xiboplayer]   GPU:     selected ${gpu_names[selected_idx]} → ${SELECTED_GPU_RENDER_NODE} (pref: ${pref})" >&2
+    fi
 
     if [[ -n "$SELECTED_GPU_VA_DRIVER" ]]; then
         export LIBVA_DRIVER_NAME="$SELECTED_GPU_VA_DRIVER"
@@ -422,13 +450,6 @@ build_chromium_args() {
         --lang=en-US
         "--auto-select-desktop-capture-source=Entire screen"
         --auto-accept-this-tab-capture
-        # GPU acceleration — offload raster/composite from renderer to GPU process.
-        # Without these, Chromium renders/rasters in the renderer process (CPU-heavy).
-        # With these, work moves to the GPU process (hardware-accelerated).
-        --ignore-gpu-blocklist
-        --enable-gpu-rasterization
-        --enable-zero-copy
-        --enable-features=CanvasOopRasterization
         # Larger tiles = fewer raster jobs for fullscreen signage content
         --default-tile-width=512
         --default-tile-height=512
@@ -452,6 +473,28 @@ build_chromium_args() {
         --disable-breakpad
         --metrics-recording-only
     )
+
+    # GPU acceleration — split by whether a usable hardware GPU is present.
+    # detect_and_select_gpu() sets SELECTED_GPU_IS_VIRTUAL=true for
+    # virtio-gpu / QEMU Bochs / VMware SVGA. On those, enabling GPU raster
+    # / zero-copy / ignoring blocklist causes Chromium's GPU process to
+    # call DRM_IOCTL_MODE_CREATE_DUMB → EACCES → crash loop (4000+ retries).
+    # On a real GPU these same flags give real acceleration. Override via
+    # XIBOPLAYER_FORCE_GPU=1 for users with working virgl who want to opt in.
+    if [[ "${SELECTED_GPU_IS_VIRTUAL:-false}" == "true" && "${XIBOPLAYER_FORCE_GPU:-0}" != "1" ]]; then
+        BROWSER_ARGS+=(
+            --disable-gpu
+            --disable-gpu-compositing
+            --disable-gpu-rasterization
+        )
+    else
+        BROWSER_ARGS+=(
+            --ignore-gpu-blocklist
+            --enable-gpu-rasterization
+            --enable-zero-copy
+            --enable-features=CanvasOopRasterization
+        )
+    fi
 
     # Kiosk / fullscreen / window size
     if [[ "$KIOSK_MODE" == "true" ]]; then

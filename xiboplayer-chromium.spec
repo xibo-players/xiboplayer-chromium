@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           xiboplayer-chromium
-Version:        0.7.19
+Version:        0.7.20
 Release:        1%{?dist}
 Summary:        Self-contained Xibo digital signage player (Chromium kiosk)
 
@@ -131,6 +131,9 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %changelog
+* Thu Apr 16 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.20-1
+- GPU detection: virtio-gpu / QEMU / VMware SVGA force software rendering to avoid crash loop (MODE_CREATE_DUMB EACCES). Real GPUs unchanged.
+
 * Tue Apr 14 2026 Pau Aliagas <linuxnow@gmail.com> - 0.7.19-1
 - Stability fixes + chromium instrumentation: proxy crash on closed client stream, stale-cache age log calculation, chromium launcher renderer log forwarding, SECURITY.md, SBOM CI.
 
